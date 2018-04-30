@@ -1,6 +1,10 @@
 #ifndef _DEFS_H_
 #define _DEFS_H_
 
+// Useful typedefs
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+
 // Error Macros
 #define MAX -1
 #define NST -2
@@ -16,6 +20,7 @@
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
 
+// Stringification Macros
 #define MACRO_STRINGIFY_(X) #X
 #define MACRO_STRINGIFY(X) MACRO_STRINGIFY_(X)
 
