@@ -16,4 +16,7 @@
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
 
+#define MACRO_STRINGIFY_(X) #X
+#define MACRO_STRINGIFY(X) MACRO_STRINGIFY_(X)
+
 #endif  // _DEFS_H_

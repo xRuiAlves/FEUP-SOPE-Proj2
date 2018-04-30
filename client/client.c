@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include "defs.h"
 
 void print_usage(FILE* stream) {
@@ -12,10 +13,8 @@ int main(int argc, char* argv[]) {
         return ERR;
     }
     
-    char format[4];
-    sprintf(format, "%%0%dd\n", WIDTH_PID);
-    char pid[6];
-    snprintf(pid, 6, format, getpid());
+    char pid[WIDTH_PID+1];
+    snprintf(pid, WIDTH_PID+1, "%0" MACRO_STRINGIFY(WIDTH_PID) "d", getpid());
     
     printf("Normalized PID: %s\n", pid);
     
