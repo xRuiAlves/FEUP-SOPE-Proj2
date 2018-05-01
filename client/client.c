@@ -8,6 +8,7 @@
 #include <limits.h>
 #include "defs.h"
 #include "client.h"
+#include "request_message.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
     // Create request message
     RequestMessage msg = create_request_message(getpid(), num_wanted_seats, parsed_pref_seat_list, num_pref_seats);
 
-    printf("\nTimeout value: %u\n", time_out);
+    printf("Timeout value: %u\n", time_out);
     printf("Number of Wanted Seats: %u\n", msg.num_wanted_seats);
     printf("PID: %u\n", msg.pid);
     printf("Number of prefered seats: %u\n", msg.num_pref_seats);
@@ -124,11 +125,6 @@ u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u
         }
 
         parsed_seats_counter++;
-    }
-
-    int i=0;
-    for (i=0 ; i<num_pref_seats ; i++) {
-        printf("%d\n", parsed_pref_seat_list[i]);
     }
 
     return num_pref_seats;
