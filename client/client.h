@@ -1,6 +1,8 @@
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
 
+#include "request_message.h"
+
 /**
   * Prints the correct program usage
   *
@@ -46,6 +48,8 @@ u_int parse_num_wanted_seats(char* num_wanted_seats_str);
   * @return Returns the size of the prefered seat list entered by the user, or exits with failure
   *         on error (-2 if number of prefered seats out of range, -3 on invalid seat identifier)
   */
-int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats);
+u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats);
+
+RequestMessage create_request_message(u_int pid, u_int num_wanted_seats, u_int* pref_seat_list, u_int num_pref_seats);
 
 #endif  // _CLIENT_H_

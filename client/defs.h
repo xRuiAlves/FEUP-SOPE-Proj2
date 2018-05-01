@@ -12,11 +12,13 @@ typedef unsigned long u_long;
 #define ERR -4
 #define NAV -5
 #define FUL -6
+#define FIFO_CREATION_ERROR 1
 
 // Server Data Macros
 #define MAX_ROOM_SEATS  9999
 #define MAX_CLI_SEATS   99
 #define WIDTH_PID       5
+#define WIDTH_FIFO_NAME  (WIDTH_PID + 3)
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
 

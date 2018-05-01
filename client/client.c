@@ -3,9 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <limits.h>
 #include "defs.h"
 #include "client.h"
-#include "limits.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
@@ -13,22 +15,34 @@ int main(int argc, char* argv[]) {
         exit(ERR);
     }
 
-    // Parse pid to wanted length
-    char pid[WIDTH_PID+1];
-    snprintf(pid, WIDTH_PID+1, "%0" MACRO_STRINGIFY(WIDTH_PID) "d", getpid());
-
     // Parse parameters
     u_int time_out = parse_time_out_val(argv[1]);
     u_int num_wanted_seats = parse_num_wanted_seats(argv[2]);
     u_int* parsed_pref_seat_list = (u_int*) malloc(MAX_ROOM_SEATS);
     u_int num_pref_seats = parse_pref_seat_list(argv[3], parsed_pref_seat_list, num_wanted_seats);
 
-    printf("Timeout value: %u\n", time_out);
-    printf("Number of Wanted Seats: %u\n", num_wanted_seats);
-    printf("Prefered seats list:\n");
+    // Parse pid to wanted length and create FIFO
+    char pid[WIDTH_PID+1];
+    char fifo_name[WIDTH_FIFO_NAME] = "ans";
+    snprintf(pid, WIDTH_PID+1, "%0" MACRO_STRINGIFY(WIDTH_PID) "d", getpid());
+    strncat(fifo_name, pid, WIDTH_PID);
+
+    if (mkfifo(fifo_name, 0660) != 0) {
+        fprintf(stderr, "Error: failed to create fifo.\n");
+        exit(FIFO_CREATION_ERROR);
+    }
+
+    // Create request message
+    RequestMessage msg = create_request_message(getpid(), num_wanted_seats, parsed_pref_seat_list, num_pref_seats);
+
+    printf("\nTimeout value: %u\n", time_out);
+    printf("Number of Wanted Seats: %u\n", msg.num_wanted_seats);
+    printf("PID: %u\n", msg.pid);
+    printf("Number of prefered seats: %u\n", msg.num_pref_seats);
+    printf("Prefered Seats:\n");
     int i;
-    for (i=0 ; i<num_pref_seats ; i++) {
-        printf("- %u\n",  parsed_pref_seat_list[i]);
+    for (i=0 ; i<msg.num_pref_seats ; i++) {
+        printf("\t%u\n",  msg.pref_seat_list[i]);
     }
 
     return 0;
@@ -77,7 +91,7 @@ u_int parse_unsigned_int(char* str) {
     }
 }
 
-int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats) {
+u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats) {
     char* seat;
     char* rest = strdup(pref_seat_list);
     u_int num_pref_seats = 0;
@@ -118,6 +132,17 @@ int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_i
     }
 
     return num_pref_seats;
+}
+
+RequestMessage create_request_message(u_int pid, u_int num_wanted_seats, u_int* pref_seat_list, u_int num_pref_seats) {
+    RequestMessage msg;
+
+    msg.pid = pid;
+    msg.num_wanted_seats = num_wanted_seats;
+    msg.pref_seat_list = pref_seat_list;
+    msg.num_pref_seats = num_pref_seats;
+
+    return msg;
 }
 
 void print_usage(FILE* stream) {
