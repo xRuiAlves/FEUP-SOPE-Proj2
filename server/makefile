@@ -1,7 +1,7 @@
 CC=gcc
 RM=rm -f
 
-CFLAGS=-g -Wall -I. -D_GNU_SOURCE
+CFLAGS=-g -Wall -I. -D_REENTRANT -lpthread
 LDFLAGS=-g
 LDLIBS=
 
