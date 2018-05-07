@@ -16,4 +16,8 @@
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
 
+//Delay in request processing simulation
+#include <unistd.h>
+#define DELAY() usleep(100);
+
 #endif  // _DEFS_H_

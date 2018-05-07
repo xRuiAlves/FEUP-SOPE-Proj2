@@ -1,8 +1,8 @@
 CC=gcc
 RM=rm -f
 
-CFLAGS=-g -Wall -I. -D_REENTRANT -lpthread
-LDFLAGS=-g
+CFLAGS=-g -Wall -I. -D_REENTRANT -pthread
+LDFLAGS=-g -pthread
 LDLIBS=
 
 #Depend file stuff
@@ -16,7 +16,7 @@ OBJS=$(subst .c,.o,$(SRCS))
 all: main
 
 main: $(OBJS)
-	$(CC) $(LDFLAGS) -o simgrep $(OBJS) $(LDLIBS)
+	$(CC) $(LDFLAGS) -o server $(OBJS) $(LDLIBS)
 
 depend: $(DEPFILE)
 

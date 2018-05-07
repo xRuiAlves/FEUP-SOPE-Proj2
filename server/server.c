@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include "server.h"
 #include "worker.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <pthread.h>
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -10,10 +15,27 @@ int main(int argc, char * argv[]) {
     }
 
     //Criar fifo de requests
+    if(mkfifo("requests", 0660) != 0) {
+        fprintf(stderr, "Error creating requests fifo\n");
+        return -2;
+    }
+
+    ///TODO: Clean up this bit
+    int num_room_seats = atoi(argv[1]);
+    int num_ticket_offices = atoi(argv[2]);
+    int open_time = atoi(argv[3]);
 
     //Criar num_ticket_offices threads auxiliares
+    pthread_t t_ids[num_ticket_offices];
+    int i;
+    for(i = 0; i < num_ticket_offices; ++i) {
+        printf("Creating thread number %d\n", i);
+        pthread_create(&(t_ids[i]), NULL, startWorking, NULL);
+        //TODO: Create the threads
+    }
 
     //Busy listen no fifo de requests
+    listen_for_requests();
     //Colocar num buffer unitário para threads irem buscar
 
     //Para cada thread:
@@ -32,6 +54,18 @@ int main(int argc, char * argv[]) {
     //Fim do main thread:
     //Fechar fifo de respostas
     //Informar os threads que devem terminar
+}
+
+int listen_for_requests() {
+    int fifo_read_fd = open("requests", O_RDONLY);
+
+    if(fifo_read_fd == -1) {
+        return -1;
+    }
+
+    //Complete
+
+    return 0;
 }
 
 void print_usage(FILE * stream, char * progname) {

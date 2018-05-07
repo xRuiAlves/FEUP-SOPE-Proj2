@@ -3,4 +3,6 @@
 
 void print_usage(FILE * stream, char * progname);
 
+int listen_for_requests();
+
 #endif  // _SERVER_H_
