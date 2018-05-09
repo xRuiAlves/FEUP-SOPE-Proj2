@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "synchronization.h"
+#include "buffer.h"
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -24,6 +26,12 @@ int main(int argc, char * argv[]) {
     int num_room_seats = atoi(argv[1]);
     int num_ticket_offices = atoi(argv[2]);
     int open_time = atoi(argv[3]);
+
+    //Inicializar mecanismos de sincronização
+   if(init_sync() != 0) {
+       fprintf(stderr, "Error initializing synchornization mechanisms!\n");
+       return -3;
+   }
 
     //Criar num_ticket_offices threads auxiliares
     pthread_t t_ids[num_ticket_offices];
@@ -54,6 +62,13 @@ int main(int argc, char * argv[]) {
     //Fim do main thread:
     //Fechar fifo de respostas
     //Informar os threads que devem terminar
+
+    //
+    if(finish_sync() != 0) {
+        fprintf(stderr, "Error in closing synchronization mechanisms!\n");
+    }
+
+    return 0;
 }
 
 int listen_for_requests() {
@@ -63,7 +78,14 @@ int listen_for_requests() {
         return -1;
     }
 
-    //Complete
+    //Waits until potentially read data can be sent for reading
+    wait_can_send_data_sem();
+    //Reads data
+    //Writes it to buffer
+    write_to_buffer("test");
+    //Signals that there is data to read
+    signal_has_data_sem();
+
 
     return 0;
 }
