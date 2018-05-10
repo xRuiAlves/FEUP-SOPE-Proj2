@@ -81,7 +81,8 @@ u_int parse_unsigned_int(char* str) {
     char* endptr = NULL;
     long val = strtol(str, &endptr, 10);
 
-    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN || val < 0)) ||
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
+        (val < 0) ||
         (errno != 0 && val == 0) ||
         (str == endptr)) {
 
