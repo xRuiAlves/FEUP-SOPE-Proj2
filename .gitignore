@@ -1,3 +1,5 @@
+##Please stop being annoying, vscode
+*.vscode
 ## Result of makefile
 *.depend
 
