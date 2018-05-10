@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include "synchronization.h"
 #include "buffer.h"
+#include "defs.h"
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -39,7 +40,6 @@ int main(int argc, char * argv[]) {
     for(i = 0; i < num_ticket_offices; ++i) {
         printf("Creating thread number %d\n", i);
         pthread_create(&(t_ids[i]), NULL, startWorking, NULL);
-        //TODO: Create the threads
     }
 
     //Busy listen no fifo de requests
@@ -60,8 +60,17 @@ int main(int argc, char * argv[]) {
      */
 
     //Fim do main thread:
-    //Fechar fifo de respostas
+    //Fechar fifo de pedidos (feito na função de leitura o descritor de leitura)
+    unlink("request");
     //Informar os threads que devem terminar
+    set_worker_status(WORKER_STOP);
+    //Aguardar que os threads terminem
+    for(i = 0; i < num_ticket_offices; ++i) {
+        printf("Waiting for thread number %d\n", i);
+        if(pthread_join(t_ids[i], NULL) != 0) {
+            printf("Error attempting to join thread %d\n", i);
+        }
+    }
 
     //
     if(finish_sync() != 0) {
@@ -71,21 +80,61 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
+static unsigned int readline_until_char(int fd, char buffer[], char delim) {
+    char read_char;
+    unsigned int counter = 0;
+    while(read(fd, &read_char, 1) != 0) {
+        if(read_char == delim) {
+           break;
+        }
+
+        if(counter >= MAX_MESSAGE_SIZE) {
+            fprintf(stderr, "Attempting to read a message bigger than the expected maximum message size!\n");
+            return -1;
+        }
+
+        buffer[counter++] = read_char;
+    }
+
+    //Closing the buffer with a null terminator
+    buffer[counter] = '\0';
+
+    return counter;
+}
+
 int listen_for_requests() {
     int fifo_read_fd = open("requests", O_RDONLY);
+    char read_buffer[MAX_MESSAGE_SIZE];
+    unsigned int n_chars_read = 0;
 
     if(fifo_read_fd == -1) {
         return -1;
     }
 
-    //Waits until potentially read data can be sent for reading
-    wait_can_send_data_sem();
-    //Reads data
-    //Writes it to buffer
-    write_to_buffer("test");
-    //Signals that there is data to read
-    signal_has_data_sem();
-
+    //TODO: change loop condition
+    while(1) {
+        //Waits until potentially read data can be sent for reading
+        wait_can_send_data_sem();
+        //Reads data
+        do {
+            n_chars_read = readline_until_char(fifo_read_fd, read_buffer, '\n');
+            if(n_chars_read == -1) {
+                fprintf(stderr, "Error in reading message from request fifo\n");
+                return -2;
+            }
+            if(n_chars_read == 0) {
+                //printf("request fifo is not open for writing\n");
+                //Sleeping for a bit to reduce waste of processing
+                usleep(CLOSED_WRITE_FIFO_WAIT_DELAY_MS * 1000);
+                continue;
+            }
+            printf("Concluded reading of message with %u chars: %s\n", n_chars_read, read_buffer);
+        } while(n_chars_read == 0);
+        //Writes it to buffer
+        write_to_buffer(read_buffer);
+        //Signals that there is data to read
+        signal_has_data_sem();
+    }
 
     return 0;
 }
