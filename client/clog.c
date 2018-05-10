@@ -34,7 +34,7 @@ void writeinLog(int answer[]) {
     int i;
     int n_seats = answer[0];
     for(i=1;i<=n_seats;i++){
-      fprintf(fp,"%.5d %.2d.%.2d \n",getpid(),answer[i],n_seats);
+      fprintf(fp,"%.5d %.2d.%.2d %.4d \n",getpid(),i,n_seats, answer[i]);
       fflush(fp);
     }
 
