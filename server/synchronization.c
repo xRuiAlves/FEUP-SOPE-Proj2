@@ -3,6 +3,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include "buffer.h"
+#include <errno.h>
 
 static sem_t has_data_sem;
 static sem_t can_send_data_sem;
@@ -44,6 +45,18 @@ int finish_sync() {
 void wait_has_data_sem() {
     if(sem_wait(&has_data_sem) != 0) {
         fprintf(stderr, "Error in wait for has data semaphore!\n");
+    }
+}
+
+int try_wait_has_data_sem() {
+    if(sem_trywait(&has_data_sem) == 0) {
+        return 0;
+    } else {
+        if(errno == EAGAIN) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 }
 

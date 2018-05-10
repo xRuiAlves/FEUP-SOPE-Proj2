@@ -27,9 +27,21 @@ void * startWorking(void * args) {
     char * mydata;
     ClientMessage cmess;
     int parse_status = 0;
+    int sem_wait_status = 0;
     while(worker_status) {
         //Waits until there is data to read
-        wait_has_data_sem();
+        sem_wait_status = try_wait_has_data_sem();
+        if(sem_wait_status == -1) {
+            fprintf(stderr, "Error in call to try wait for has data sem!\n");
+            return (void *) -1;
+        }
+        if(sem_wait_status == 1) {
+            //Must wait for semaphore
+            //Sleeping for a bit to reduce processing waste
+            usleep(NON_BLOCKING_SEM_WAIT_DELAY_MS * 1000);
+            //Continue to recheck loop condition
+            continue;
+        }
         mydata = read_buffer();
         //Signals that data can be written once again, for it has been read
         signal_can_send_data_sem();
@@ -37,13 +49,16 @@ void * startWorking(void * args) {
         parse_status = parse_client_message(mydata, &cmess);
         if(parse_status != 0) {
             printf("Parsing of client message failed with status %d\n", parse_status);
-            //Handle error response, etc
+            //Handle error response, reply to client if need be, etc
             continue;
         }
+
+    ////From now on we are processing a request so it must always be able to end, regardless if threads are shutting down
 
         //Client message has no errors, attempt request
         int i;
         int num_reserved_seats = 0;
+        int seat_free_status;
         unsigned int reserved_seats[cmess.num_wanted_seats];
         //Requesting lock on seats mutex
         lock_seats_mutex();
@@ -52,7 +67,13 @@ void * startWorking(void * args) {
                 break;
             }
 
-            if(isSeatFree(seats, cmess.pref_seats[i]) == 1) {
+            seat_free_status = isSeatFree(seats, cmess.pref_seats[i]);
+            if(seat_free_status == 2) {
+                //Room is full, break
+                break;
+            }
+
+            if(seat_free_status == 1) {
                 //Seat is free, book it
                 bookSeat(seats, cmess.pref_seats[i], cmess.pid);
                 reserved_seats[num_reserved_seats++] = cmess.pref_seats[i];
@@ -66,7 +87,11 @@ void * startWorking(void * args) {
         }
         unlock_seats_mutex();
 
-        if(num_reserved_seats < cmess.num_wanted_seats) {
+        if(seat_free_status == 2) {
+            printf("Room was full at some point during resevation\n");
+            //Failure with FUL
+            //Write response
+        } else if(num_reserved_seats < cmess.num_wanted_seats) {
             printf("At least one wanted seat could not be booked\n");
             //Failure with NAV
             //Write response

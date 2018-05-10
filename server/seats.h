@@ -8,8 +8,10 @@ typedef struct {
     int owner_clientid;
 } Seat;
 
+void initNrAvailableSeats(unsigned int n_available_seats);
+
 /**
- * Returns 1 if seat is free, 0 if it is taken and -1 in case of error
+ * Returns 1 if seat is free, 0 if it is taken, 2 if room is full and -1 in case of error
  */
 int isSeatFree(Seat *seats, int seatNum);
 

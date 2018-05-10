@@ -11,6 +11,7 @@
 #include "defs.h"
 #include "parser.h"
 #include <limits.h>
+#include "seats.h"
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -19,19 +20,21 @@ int main(int argc, char * argv[]) {
         return -1;
     }
 
-    int num_room_seats = parse_unsigned_int(argv[1]);
-    if(num_room_seats == UINT_MAX || num_room_seats == 0) {
-        fprintf(stderr, "Invalid value for num_room_seats, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
+    unsigned int num_room_seats = parse_unsigned_int(argv[1]);
+    if(num_room_seats == UINT_MAX || num_room_seats == 0 || num_room_seats > MAX_ROOM_SEATS) {
+        fprintf(stderr, "Invalid value for num_room_seats, must be non zero positive value smaller than MAX_ROOM_SEATS (%d)\n", MAX_ROOM_SEATS);
         print_usage(stderr, argv[0]);
         return -3;
     }
-    int num_ticket_offices = parse_unsigned_int(argv[2]);
+    printf("Initializing room with %u seats\n", num_room_seats);
+    initNrAvailableSeats(num_room_seats);
+    unsigned int num_ticket_offices = parse_unsigned_int(argv[2]);
     if(num_ticket_offices == UINT_MAX || num_ticket_offices == 0) {
         fprintf(stderr, "Invalid value for num_ticket_offices, must be non zero positive value\n");
         print_usage(stderr, argv[0]);
         return -3;
     }
-    int open_time = parse_unsigned_int(argv[3]);
+    unsigned int open_time = parse_unsigned_int(argv[3]);
     if(open_time == UINT_MAX || open_time == 0) {
         fprintf(stderr, "Invalid value for open_time, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
         print_usage(stderr, argv[0]);
@@ -81,6 +84,7 @@ int main(int argc, char * argv[]) {
     //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
     unlink("requests");
     //Informar os threads que devem terminar
+    printf("Signaling threads they should end\n");
     set_worker_status(WORKER_STOP);
     //Aguardar que os threads terminem
     for(i = 0; i < num_ticket_offices; ++i) {

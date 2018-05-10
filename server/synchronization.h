@@ -5,6 +5,11 @@ int init_sync();
 int finish_sync();
 
 void wait_has_data_sem();
+/**
+ * Returns 0 if the wait succeeded, 1 if the caller must wait (normal wait call would block), -1 if an error ocurred
+ * (Does not block)
+ */
+int try_wait_has_data_sem();
 void signal_has_data_sem();
 void wait_can_send_data_sem();
 void signal_can_send_data_sem();
