@@ -7,7 +7,7 @@ int isSeatFree(Seat *seats, int seatNum) {
         return -1;
     }
 
-    int result = seats[seatNum-1].isTaken;
+    int result = !seats[seatNum-1].isTaken;
 
     DELAY();
 

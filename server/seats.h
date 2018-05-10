@@ -8,6 +8,9 @@ typedef struct {
     int owner_clientid;
 } Seat;
 
+/**
+ * Returns 1 if seat is free, 0 if it is taken and -1 in case of error
+ */
 int isSeatFree(Seat *seats, int seatNum);
 
 void bookSeat(Seat *seats, int seatNum, int clientId);
