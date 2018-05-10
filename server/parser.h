@@ -3,7 +3,11 @@
 
 #include <stdlib.h>
 
+/**
+ * In case of error returns UINT_MAX (defined in <limits.h>)
+ */
 unsigned int parse_unsigned_int(char* str);
+
 /**
  * Splits a string based on given tokens. Result is returned via the last 2 arguments which should be passed by reference.
  * Is thread safe.

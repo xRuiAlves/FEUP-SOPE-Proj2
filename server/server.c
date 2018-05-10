@@ -9,6 +9,8 @@
 #include "synchronization.h"
 #include "buffer.h"
 #include "defs.h"
+#include "parser.h"
+#include <limits.h>
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -24,14 +26,29 @@ int main(int argc, char * argv[]) {
     }
 
     ///TODO: Clean up this bit
-    int num_room_seats = atoi(argv[1]);
-    int num_ticket_offices = atoi(argv[2]);
+    int num_room_seats = parse_unsigned_int(argv[1]);
+    if(num_room_seats == UINT_MAX || num_room_seats == 0) {
+        fprintf(stderr, "Invalid value for num_room_seats, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
+        print_usage(stderr, argv[0]);
+        return -3;
+    }
+    int num_ticket_offices = parse_unsigned_int(argv[2]);
+    if(num_ticket_offices == UINT_MAX || num_ticket_offices == 0) {
+        fprintf(stderr, "Invalid value for num_ticket_offices, must be non zero positive value\n");
+        print_usage(stderr, argv[0]);
+        return -3;
+    }
     int open_time = atoi(argv[3]);
+    if(open_time == UINT_MAX || open_time == 0) {
+        fprintf(stderr, "Invalid value for open_time, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
+        print_usage(stderr, argv[0]);
+        return -3;
+    }
 
     //Inicializar mecanismos de sincronização
    if(init_sync() != 0) {
        fprintf(stderr, "Error initializing synchornization mechanisms!\n");
-       return -3;
+       return -4;
    }
 
     //Criar num_ticket_offices threads auxiliares
@@ -39,7 +56,9 @@ int main(int argc, char * argv[]) {
     int i;
     for(i = 0; i < num_ticket_offices; ++i) {
         printf("Creating thread number %d\n", i);
-        pthread_create(&(t_ids[i]), NULL, startWorking, NULL);
+        if(pthread_create(&(t_ids[i]), NULL, startWorking, NULL) != 0) {
+            fprintf(stderr, "Error creating thread %d\n", i);
+        }
     }
 
     //Busy listen no fifo de requests
@@ -60,7 +79,7 @@ int main(int argc, char * argv[]) {
      */
 
     //Fim do main thread:
-    //Fechar fifo de pedidos (feito na função de leitura o descritor de leitura)
+    //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
     unlink("request");
     //Informar os threads que devem terminar
     set_worker_status(WORKER_STOP);
@@ -72,7 +91,7 @@ int main(int argc, char * argv[]) {
         }
     }
 
-    //
+    //Fecho de mecanismos de sincronização
     if(finish_sync() != 0) {
         fprintf(stderr, "Error in closing synchronization mechanisms!\n");
     }
