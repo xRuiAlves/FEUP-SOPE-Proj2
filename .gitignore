@@ -1,3 +1,6 @@
+## Result of makefile
+*.depend
+
 # Prerequisites
 *.d
 
