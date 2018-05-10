@@ -8,7 +8,7 @@
 
 FILE *fp = NULL;
 
-int main(){
+/*int main(){
   const char* fileName = "clog.txt";
   fp = fopen(fileName,"a");
   if(fp == NULL){
@@ -26,7 +26,7 @@ int main(){
   writeinLog(answer3);
   writeinLog(answer4);
   return 0;
-}
+}*/
 
 void writeinLog(int answer[]) {
   if(answer[0] > 0)
