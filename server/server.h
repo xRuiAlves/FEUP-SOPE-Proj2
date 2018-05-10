@@ -3,6 +3,6 @@
 
 void print_usage(FILE * stream, char * progname);
 
-int listen_for_requests();
+int listen_for_requests(int open_time_s);
 
 #endif  // _SERVER_H_

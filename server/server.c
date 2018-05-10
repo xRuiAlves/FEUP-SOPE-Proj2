@@ -19,13 +19,6 @@ int main(int argc, char * argv[]) {
         return -1;
     }
 
-    //Criar fifo de requests
-    if(mkfifo("requests", 0660) != 0) {
-        fprintf(stderr, "Error creating requests fifo\n");
-        return -2;
-    }
-
-    ///TODO: Clean up this bit
     int num_room_seats = parse_unsigned_int(argv[1]);
     if(num_room_seats == UINT_MAX || num_room_seats == 0) {
         fprintf(stderr, "Invalid value for num_room_seats, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
@@ -38,11 +31,17 @@ int main(int argc, char * argv[]) {
         print_usage(stderr, argv[0]);
         return -3;
     }
-    int open_time = atoi(argv[3]);
+    int open_time = parse_unsigned_int(argv[3]);
     if(open_time == UINT_MAX || open_time == 0) {
         fprintf(stderr, "Invalid value for open_time, must be non zero positive value\n\nNOT YET USING THIS!!!\n");
         print_usage(stderr, argv[0]);
         return -3;
+    }
+    
+    //Criar fifo de requests
+    if(mkfifo("requests", 0660) != 0) {
+        fprintf(stderr, "Error creating requests fifo\n");
+        return -2;
     }
 
     //Inicializar mecanismos de sincronização
@@ -62,8 +61,8 @@ int main(int argc, char * argv[]) {
     }
 
     //Busy listen no fifo de requests
-    listen_for_requests();
-    //Colocar num buffer unitário para threads irem buscar
+    listen_for_requests(open_time);
+    //Colocar num buffer unitário para threads irem buscar (feito acima)
 
     //Para cada thread:
     /**
@@ -80,7 +79,7 @@ int main(int argc, char * argv[]) {
 
     //Fim do main thread:
     //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
-    unlink("request");
+    unlink("requests");
     //Informar os threads que devem terminar
     set_worker_status(WORKER_STOP);
     //Aguardar que os threads terminem
@@ -99,9 +98,9 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
-static unsigned int readline_until_char(int fd, char buffer[], char delim) {
+static int readline_until_char(int fd, char buffer[], char delim) {
     char read_char;
-    unsigned int counter = 0;
+    int counter = 0;
     while(read(fd, &read_char, 1) != 0) {
         if(read_char == delim) {
            break;
@@ -121,19 +120,25 @@ static unsigned int readline_until_char(int fd, char buffer[], char delim) {
     return counter;
 }
 
-int listen_for_requests() {
-    int fifo_read_fd = open("requests", O_RDONLY);
+int listen_for_requests(int open_time_s) {
+    int fifo_read_fd = open("requests", O_RDONLY | O_NONBLOCK);
     char read_buffer[MAX_MESSAGE_SIZE];
-    unsigned int n_chars_read = 0;
+    int n_chars_read = 0;
+    time_t start_time;
+    time(&start_time);
 
     if(fifo_read_fd == -1) {
         return -1;
     }
 
-    //TODO: change loop condition
-    while(1) {
+    printf("Entering reading loop\n");
+
+    //time(NULL) gets the current time, so difftime compares the current time to the time when this function started
+    while(difftime(time(NULL), start_time) <= open_time_s) {
+        printf("Waiting until I can send data\n");
         //Waits until potentially read data can be sent for reading
         wait_can_send_data_sem();
+        printf("I can now send data!\n");
         //Reads data
         do {
             n_chars_read = readline_until_char(fifo_read_fd, read_buffer, '\n');
@@ -147,14 +152,21 @@ int listen_for_requests() {
                 usleep(CLOSED_WRITE_FIFO_WAIT_DELAY_MS * 1000);
                 continue;
             }
-            printf("Concluded reading of message with %u chars: %s\n", n_chars_read, read_buffer);
-        } while(n_chars_read == 0);
-        //Writes it to buffer
-        write_to_buffer(read_buffer);
-        //Signals that there is data to read
-        signal_has_data_sem();
+            printf("Concluded reading of message with %d chars: %s\n", n_chars_read, read_buffer);
+        } while(n_chars_read == 0 && difftime(time(NULL), start_time) <= open_time_s);
+        
+        //Because it is possible to exit the internal loop with nothing read (time has ended)
+        if(n_chars_read > 0) {
+            printf("Actual data was read, writing to buffer\n");
+            //Writes it to buffer
+            write_to_buffer(read_buffer);
+            //Signals that there is data to read
+            signal_has_data_sem();
+        }
     }
 
+    printf("Time ended, closing reading function\n");
+    close(fifo_read_fd);
     return 0;
 }
 
