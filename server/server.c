@@ -12,6 +12,7 @@
 #include "parser.h"
 #include <limits.h>
 #include "seats.h"
+#include <errno.h>
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -105,7 +106,8 @@ int main(int argc, char * argv[]) {
 static int readline_until_char(int fd, char buffer[], char delim) {
     char read_char;
     int counter = 0;
-    while(read(fd, &read_char, 1) != 0) {
+    ssize_t read_status = 0;
+    while((read_status = read(fd, &read_char, 1)) > 0) {
         if(read_char == delim) {
            break;
         }
@@ -116,6 +118,14 @@ static int readline_until_char(int fd, char buffer[], char delim) {
         }
 
         buffer[counter++] = read_char;
+    }
+
+    if(read_status == -1) {
+        if(errno == EAGAIN) {
+            return 0;
+        } else {
+            return -2;
+        }
     }
 
     //Closing the buffer with a null terminator
@@ -146,8 +156,8 @@ int listen_for_requests(int open_time_s) {
         //Reads data
         do {
             n_chars_read = readline_until_char(fifo_read_fd, read_buffer, '\n');
-            if(n_chars_read == -1) {
-                fprintf(stderr, "Error in reading message from request fifo\n");
+            if(n_chars_read < 0) {
+                fprintf(stderr, "Failure in reading message from request fifo with error level %d\n", n_chars_read);
                 return -2;
             }
             if(n_chars_read == 0) {
