@@ -26,5 +26,13 @@ typedef struct RequestMessage_struct {
   */
 RequestMessage create_request_message(u_int pid, u_int num_wanted_seats, u_int* pref_seat_list, u_int num_pref_seats);
 
+/**
+  * Sends a request message to the server. Exits with error status on server
+  * fifo opening failure (4) or on message broadcasting failure (5)
+  *
+  * @param msg Request message
+  */
+void broadcast_message(RequestMessage msg);
+
 
 #endif  // _REQUEST_MESSAGE_H_

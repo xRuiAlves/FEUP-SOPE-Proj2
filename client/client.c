@@ -46,6 +46,9 @@ int main(int argc, char* argv[]) {
         printf("\t%u\n",  msg.pref_seat_list[i]);
     }
 
+    // Broadcast message to server
+    broadcast_message(msg);
+
     return 0;
 }
 

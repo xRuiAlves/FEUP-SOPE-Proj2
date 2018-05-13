@@ -9,15 +9,13 @@ static FILE *fp = NULL;
 
 void open_clog_file() {
     const char* fileName = "clog.txt";
-    fp = fopen(fileName,"a");
+    fp = fopen(fileName, "a");
 
     if(fp == NULL){
         // Error opening file
         fprintf(stderr, "Error opening client log file.\n");
         exit(CLOG_OPENING_ERROR);
     }
-
-    return 0;
 }
 
 void writeinLog(int answer[]) {
