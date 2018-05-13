@@ -58,6 +58,10 @@ void writeinLog(int answer[]) {
             writeError("FUL");
             break;
         }
+        case OUT:
+            writeError("FUL");
+            break;
+        }
     }
 
     // Close clog file

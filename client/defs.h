@@ -12,6 +12,7 @@ typedef unsigned long u_long;
 #define ERR -4
 #define NAV -5
 #define FUL -6
+#define OUT -7
 #define FIFO_CREATION_ERROR         1
 #define CLOG_OPENING_ERROR          2
 #define CLIENT_FIFO_OPENING_ERROR   3
