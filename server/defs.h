@@ -24,4 +24,15 @@
 #define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     50
 #define NON_BLOCKING_SEM_WAIT_DELAY_MS      50 
 
+// Stringification Macros
+#define MACRO_STRINGIFY_(X) #X
+#define MACRO_STRINGIFY(X)  MACRO_STRINGIFY_(X)
+
+//Comms
+
+#define REQUEST_FIFO_NAME           "requests"
+#define CLIENT_ANSWER_PREFIX        "ans"
+
+#define WIDTH_FIFO_NAME     (WIDTH_PID + 3)
+
 #endif  // _DEFS_H_

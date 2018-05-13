@@ -74,6 +74,7 @@ void * startWorking(void * args) {
         if(cmess.num_wanted_seats > getNrAvailableSeats()) {
             //Room would be full, FUL error
             replyToClient_error(cmess.pid, FUL);
+            seat_free_status = -1;
         } else {
             for(i = 0; i < cmess.num_pref_seats; ++i) {
                 if(num_reserved_seats == cmess.num_wanted_seats) {
@@ -101,6 +102,11 @@ void * startWorking(void * args) {
         }
         unlock_seats_mutex();
 
+        if(seat_free_status == -1) {
+            //Error already dealt with
+            continue;
+        }
+
         if(seat_free_status == 2) {
             printf("Room was full at some point during resevation\n");
             //Failure with FUL
@@ -116,7 +122,7 @@ void * startWorking(void * args) {
         }
     }
 
-    printf("Worker exiting\n");
+    //printf("Worker exiting\n");
     return NULL;
 }
 
