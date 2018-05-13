@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 u_int parse_time_out_val(char* time_out_str) {
     u_int time_out = parse_unsigned_int(time_out_str);
     if (time_out == UINT_MAX || time_out == 0) {
-        fprintf(stderr, "Error: time_out must be a positive integer value.\n");
+        fprintf(stderr, "Error: The timeout value must be a positive integer value.\n");
         print_usage(stderr);
         exit(ERR);  // Parameter error
     } else {
@@ -64,16 +64,43 @@ u_int parse_num_wanted_seats(char* num_wanted_seats_str) {
     u_int num_wanted_seats = parse_unsigned_int(num_wanted_seats_str);
 
     if (num_wanted_seats == UINT_MAX) {
-        fprintf(stderr, "Error: the number of wanted seats must be an integer in the range [1, %d].\n", MAX_CLI_SEATS);
+        fprintf(stderr, "Error: The number of wanted seats must be a positive integer value.\n");
         print_usage(stderr);
         exit(ERR);  // Parameter error
-    } else  if (num_wanted_seats == 0 || num_wanted_seats > MAX_CLI_SEATS ){
-        fprintf(stderr, "Error: the number of wanted seats must be an integer in the range [1, %d].\n", MAX_CLI_SEATS);
-        print_usage(stderr);
-        exit(MAX);  // Invalid number of wanted seats
     } else {
         return num_wanted_seats;
     }
+}
+
+u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats) {
+    char* seat;
+    char* rest = strdup(pref_seat_list);
+    u_int num_pref_seats = 0;
+
+    // Count the number of prefered seats entered by the user
+    while( (seat = strtok_r(rest, " ", &rest)) ) {
+        num_pref_seats++;
+    }
+
+    // Parse the prefered seats list
+    parsed_pref_seat_list = (u_int *) realloc(parsed_pref_seat_list, num_pref_seats*sizeof(u_int));
+    u_int parsed_seats_counter = 0;
+    rest = strdup(pref_seat_list);
+
+    while( (seat = strtok_r(rest, " ", &rest)) ) {
+        parsed_pref_seat_list[parsed_seats_counter] = parse_unsigned_int(seat);
+
+        // Verify if value is a number
+        if (parsed_pref_seat_list[parsed_seats_counter] == UINT_MAX) {
+            fprintf(stderr, "Error: The seat identifiers must be positive integer values.\n");
+            print_usage(stderr);
+            exit(ERR);  // Invalid number of prefered seats identifiers
+        }
+
+        parsed_seats_counter++;
+    }
+
+    return num_pref_seats;
 }
 
 u_int parse_unsigned_int(char* str) {
@@ -91,44 +118,6 @@ u_int parse_unsigned_int(char* str) {
     else {
         return (u_int) val;
     }
-}
-
-u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats) {
-    char* seat;
-    char* rest = strdup(pref_seat_list);
-    u_int num_pref_seats = 0;
-
-    // Count the number of prefered seats entered by the user
-    while( (seat = strtok_r(rest, " ", &rest)) ) {
-        num_pref_seats++;
-    }
-
-    // Verify number of prefered seats "correctness"
-    if (num_pref_seats < num_wanted_seats || num_pref_seats > MAX_ROOM_SEATS) {
-        fprintf(stderr, "Error: the number of specified prefered seats identifiers must be an integer in the range [num_wanted_seats, %d].\n", MAX_ROOM_SEATS);
-        print_usage(stderr);
-        exit(NST);  // Invalid number of prefered seats identifiers
-    }
-
-    // Parse the prefered seats list
-    parsed_pref_seat_list = (u_int *) realloc(parsed_pref_seat_list, num_pref_seats*sizeof(u_int));
-    u_int parsed_seats_counter = 0;
-    rest = strdup(pref_seat_list);
-
-    while( (seat = strtok_r(rest, " ", &rest)) ) {
-        parsed_pref_seat_list[parsed_seats_counter] = parse_unsigned_int(seat);
-
-        // Verify value correctness
-        if (parsed_pref_seat_list[parsed_seats_counter] == UINT_MAX || parsed_pref_seat_list[parsed_seats_counter] == 0) {
-            fprintf(stderr, "Error: Invalid prefered seat identifier - \"%s\"\n", seat);
-            print_usage(stderr);
-            exit(IID);  // Invalid number of prefered seats identifiers
-        }
-
-        parsed_seats_counter++;
-    }
-
-    return num_pref_seats;
 }
 
 void print_usage(FILE* stream) {

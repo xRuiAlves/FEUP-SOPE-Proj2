@@ -1,3 +1,4 @@
 #MAKE .DEPEND FILE
 client.o: client.c defs.h client.h request_message.h
 request_message.o: request_message.c request_message.h defs.h
+clog.o: clog.c defs.h clog.h
