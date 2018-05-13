@@ -6,6 +6,7 @@
 #include "parser.h"
 #include <limits.h>
 #include "communication.h"
+#include "slog.h"
 
 #include <unistd.h>
 #include <stdio.h>

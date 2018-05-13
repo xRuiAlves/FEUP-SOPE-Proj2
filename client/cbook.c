@@ -27,9 +27,8 @@ void close_cbook_file() {
 void writeinBookLog(int seat) {
 
   // Write all the reserved seats in the log file
-  char log_line[WIDTH_SEAT + 1];
+  char log_line[WIDTH_SEAT + 2];
 
-  sprintf(log_line,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n", seat);
+  snprintf(log_line, WIDTH_SEAT+2,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n", seat);
   write(cbook_descriptor, log_line, strlen(log_line));
-
 }

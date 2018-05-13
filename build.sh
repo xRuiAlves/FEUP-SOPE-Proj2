@@ -2,8 +2,8 @@
 
 cd server
 make clean; make
-mv server ..
+mv server.out ..
 cd ../client
 make clean; make
-mv client ..
+mv client.out ..
 
