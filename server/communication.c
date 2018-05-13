@@ -53,16 +53,16 @@ int replyToClient_success(unsigned int pid, int n_reserved_seats, unsigned int r
 
     char msg[4096];
     msg[0] = '\0';
-    char single_num[5];
+    char single_num[WIDTH_SEAT+1];
 
-    snprintf(single_num, 5, "%u", reserved_seats[0]);
-    strncat(msg, single_num, 5);
+    snprintf(single_num, WIDTH_SEAT+1, "%u", reserved_seats[0]);
+    strncat(msg, single_num, WIDTH_SEAT+1);
 
     int i;
     for(i = 1; i < n_reserved_seats; ++i) {
         strcat(msg, " ");
-        snprintf(single_num, 5, "%u", reserved_seats[0]);
-        strncat(msg, single_num, 5);
+        snprintf(single_num, WIDTH_SEAT+1, "%u", reserved_seats[i]);
+        strncat(msg, single_num, WIDTH_SEAT+1);
     }
 
     if(write(fifo_fd, msg, strlen(msg)) < 0) {
