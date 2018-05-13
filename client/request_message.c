@@ -18,7 +18,7 @@ RequestMessage create_request_message(u_int pid, u_int num_wanted_seats, u_int* 
 
 void broadcast_message(RequestMessage msg) {
     // Open the server requests fifo
-    int server_fifo = open(SERVER_FIFO_NAME, O_WRONLY | O_APPEND);
+    int server_fifo = open(SERVER_FIFO_NAME, O_WRONLY | O_APPEND | O_CREAT, 0660);
     if (server_fifo < 0) {
         fprintf(stderr, "Error: Failed to open server requests fifo for writting.\n");
         exit(SERVER_FIFO_OPENING_ERROR);

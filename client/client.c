@@ -9,6 +9,17 @@
 #include "defs.h"
 #include "client.h"
 #include "request_message.h"
+#include "alarm.h"
+#include "clog.h"
+#include "parser.h"
+
+void fifo_unlink() {
+    char pid[WIDTH_PID+1];
+    char fifo_name[WIDTH_FIFO_NAME] = "ans";
+    snprintf(pid, WIDTH_PID+1, "%0" MACRO_STRINGIFY(WIDTH_PID) "d", getpid());
+    strncat(fifo_name, pid, WIDTH_PID);
+    unlink(fifo_name);
+}
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
@@ -33,6 +44,8 @@ int main(int argc, char* argv[]) {
         exit(FIFO_CREATION_ERROR);
     }
 
+    atexit(fifo_unlink);
+
     // Create request message
     RequestMessage msg = create_request_message(getpid(), num_wanted_seats, parsed_pref_seat_list, num_pref_seats);
 
@@ -49,7 +62,72 @@ int main(int argc, char* argv[]) {
     // Broadcast message to server
     broadcast_message(msg);
 
+    free(parsed_pref_seat_list);
+
+    // Wait for the server message
+    get_server_response(time_out, fifo_name);
+
+    unlink(fifo_name);
+
     return 0;
+}
+
+void get_server_response(u_int time_out, char fifo_name[WIDTH_FIFO_NAME]) {
+    // Prepare the alarm
+    setup_alarm();
+    alarm(time_out);
+
+    // Open fifo for reading
+    FILE* answer_fifo = fopen(fifo_name, "r");
+    if (answer_fifo == NULL) {
+        fprintf(stderr, "Error: Failed to open client fifo for reading server response.\n");
+        exit(CLIENT_FIFO_OPENING_ERROR);
+    }
+
+    // Perform reading
+    char* server_answer;
+    size_t len = 0;
+    ssize_t read_ret = getline(&server_answer, &len, answer_fifo);
+    if (read_ret < 0) {
+        fprintf(stderr, "Error: Failed to read server answer.\n");
+        exit(READ_SERVER_ANS_ERROR);
+    }
+
+    // Parse the server message
+    char** parsed_message_str;
+    size_t message_len;
+    if (split_string(server_answer, " ", &parsed_message_str, &message_len) != 0) {
+        fprintf(stderr, "Error: Failed to parse server answer.\n");
+        exit(PARSE_SERVER_ANS_ERROR);
+    }
+
+    if (parse_int(parsed_message_str[0]) < 0) {
+        // Server error status
+        int parsed_message[] = {parse_int(parsed_message_str[0])};
+        writeinLog(parsed_message);
+    }
+    else {
+        // Server success message
+        int* parsed_message = (int*) malloc((message_len+1)*sizeof(int));
+        parsed_message[0] = message_len;
+
+        int i;
+        for (i=0 ; i<message_len ; i++) {
+            parsed_message[i+1] = parse_int(parsed_message_str[i]);
+        }
+
+        writeinLog(parsed_message);
+        free (parsed_message);
+    }
+
+    // Free allocated memory and close fifo
+    free(server_answer);
+    int i;
+    for (i=0 ; i<message_len ; i++) {
+        free(parsed_message_str[i]);
+    }
+    free(parsed_message_str);
+    fclose(answer_fifo);
 }
 
 u_int parse_time_out_val(char* time_out_str) {
@@ -104,23 +182,6 @@ u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u
     }
 
     return num_pref_seats;
-}
-
-u_int parse_unsigned_int(char* str) {
-    errno = 0;
-    char* endptr = NULL;
-    long val = strtol(str, &endptr, 10);
-
-    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-        (val < 0) ||
-        (errno != 0 && val == 0) ||
-        (str == endptr)) {
-
-        return UINT_MAX;
-    }
-    else {
-        return (u_int) val;
-    }
 }
 
 void print_usage(FILE* stream) {

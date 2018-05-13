@@ -13,13 +13,6 @@
 static Seat seats[MAX_ROOM_SEATS];
 static int worker_status = WORKER_RUNNING;
 
-typedef struct {
-    unsigned int pid;
-    unsigned int num_wanted_seats;
-    unsigned int num_pref_seats;
-    unsigned int pref_seats[MAX_CLI_SEATS];
-} ClientMessage;
-
 static int parse_client_message(char * client_data, ClientMessage * cmessage);
 
 void * startWorking(void * args) {
@@ -54,6 +47,7 @@ void * startWorking(void * args) {
             if(parse_status < 0) {
                 //"Replyable" error
                 replyToClient_error(cmess.pid, parse_status);
+                writetoServerLogError(cmess,getpid(),parse_status);
             } else {
                 //"Unreplyable" error
                 fprintf(stderr, "Critical error: Cannot reply to client...\n");
@@ -75,6 +69,7 @@ void * startWorking(void * args) {
             //Room would be full, FUL error
             replyToClient_error(cmess.pid, FUL);
             seat_free_status = -1;
+            writetoServerLogError(cmess,getpid(),FUL);
         } else {
             for(i = 0; i < cmess.num_pref_seats; ++i) {
                 if(num_reserved_seats == cmess.num_wanted_seats) {
@@ -111,14 +106,17 @@ void * startWorking(void * args) {
             printf("Room was full at some point during resevation\n");
             //Failure with FUL
             replyToClient_error(cmess.pid, FUL);
+            writetoServerLogError(cmess,getpid(),FUL);
         } else if(num_reserved_seats < cmess.num_wanted_seats) {
             printf("At least one wanted seat could not be booked\n");
             //Failure with NAV
             replyToClient_error(cmess.pid, NAV);
+            writetoServerLogError(cmess,getpid(),NAV);
         } else {
             printf("All seats were booked successfully!\n");
             //Success
             replyToClient_success(cmess.pid, num_reserved_seats, reserved_seats);
+            writetoServerLog(cmess,getpid(),num_reserved_seats, reserved_seats);
         }
     }
 

@@ -9,15 +9,6 @@
 void print_usage(FILE* stream);
 
 /**
-  * Parses a string to an unsiged integer value
-  *
-  * @param value String representing an integer value
-  *
-  * @return Returns the parsed integer value OR returns UINT_MAX if error occurs
-  */
-u_int parse_unsigned_int(char* value);
-
-/**
   * Parses the time out value for the program to run
   *
   * @param time_out_str String representing time out value
@@ -47,5 +38,13 @@ u_int parse_num_wanted_seats(char* num_wanted_seats_str);
   *         on error (-2 if number of prefered seats out of range, -3 on invalid seat identifier)
   */
 u_int parse_pref_seat_list(char* pref_seat_list, u_int* parsed_pref_seat_list, u_int num_wanted_seats);
+
+/**
+ * Waits for a response from the server, for time_out second
+ *
+ * @param time_out Number of seconds for wait time
+ * @param fifo_name Name of fifo to read the answer from
+ */
+void get_server_response(u_int time_out, char fifo_name[WIDTH_FIFO_NAME]);
 
 #endif  // _CLIENT_H_

@@ -18,7 +18,12 @@ typedef unsigned long u_long;
 #define CLIENT_FIFO_OPENING_ERROR   3
 #define SERVER_FIFO_OPENING_ERROR   4
 #define MSG_BROADCAST_ERROR         5
-#define CBOOK_OPENING_ERROR          6
+#define CBOOK_OPENING_ERROR         6
+<<<<<<< 494d4fc637f0e9d8ac30f50631ee4a186d8f8a08
+#define READ_SERVER_ANS_ERROR       7
+#define PARSE_SERVER_ANS_ERROR      8
+=======
+>>>>>>> Server log stuff
 
 // Stringification Macros
 #define MACRO_STRINGIFY_(X) #X

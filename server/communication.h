@@ -5,6 +5,6 @@
 
 int replyToClient_error(unsigned int pid, int error_status);
 
-int replyToClient_success(unsigned int pid, size_t n_reserved_seats, unsigned int reserved_seats[]);
+int replyToClient_success(unsigned int pid, int n_reserved_seats, unsigned int reserved_seats[]);
 
 #endif  // _COMMUNICATION_H_

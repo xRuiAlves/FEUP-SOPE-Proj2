@@ -15,6 +15,7 @@
 #define WIDTH_PID       5
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
+#define WIDTH_NT        2
 
 //Delay in request processing simulation
 #include <unistd.h>
@@ -22,7 +23,7 @@
 
 #define MAX_MESSAGE_SIZE 512
 #define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     50
-#define NON_BLOCKING_SEM_WAIT_DELAY_MS      50 
+#define NON_BLOCKING_SEM_WAIT_DELAY_MS      50
 
 // Stringification Macros
 #define MACRO_STRINGIFY_(X) #X
@@ -34,5 +35,9 @@
 #define CLIENT_ANSWER_PREFIX        "ans"
 
 #define WIDTH_FIFO_NAME     (WIDTH_PID + 3)
+
+// Logs Macros
+#define BUFF_SIZE               4096
+#define SLOG_OPENING_ERROR         2
 
 #endif  // _DEFS_H_
