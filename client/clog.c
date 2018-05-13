@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 #include "defs.h"
 #include "clog.h"
 
-static FILE *fp = NULL;
+static int clog_descriptor;
 
 void open_clog_file() {
     const char* fileName = "clog.txt";
-    fp = fopen(fileName, "a");
+    clog_descriptor = open(fileName, O_CREAT | O_WRONLY | O_APPEND, 0660);
 
-    if(fp == NULL){
+    if(clog_descriptor < 0){
         // Error opening file
         fprintf(stderr, "Error opening client log file.\n");
         exit(CLOG_OPENING_ERROR);
@@ -26,12 +28,16 @@ void writeinLog(int answer[]) {
     if(answer[0] > 0) {
         int i;
         int n_seats = answer[0];
+        char log_line[CLOG_MSG_MAX_SIZE];
+
         for(i=1 ; i<=n_seats ; i++) {
-            fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_PID) "d ", getpid());
-            fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_XX) "d.",i);
-            fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_NN) "d ", n_seats);
-            fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n", answer[i]);
-            fflush(fp);
+            log_line[0] = '\0';
+            sprintf(log_line, "%0" MACRO_STRINGIFY(WIDTH_PID) "d "
+                              "%0" MACRO_STRINGIFY(WIDTH_XX) "d."
+                              "%0" MACRO_STRINGIFY(WIDTH_NN) "d "
+                              "%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n",
+                              getpid(), i, n_seats, answer[i]);
+            write(clog_descriptor, log_line, strlen(log_line));
         }
     }
 
@@ -64,10 +70,11 @@ void writeinLog(int answer[]) {
     }
 
     // Close clog file
-    fclose(fp);
+    close(clog_descriptor);
 }
 
 void writeError(char err[]){
-    fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_PID) "d" " %.3s\n",getpid(),err);
-    fflush(fp);
+    char log_line[CLOG_MSG_MAX_SIZE];
+    sprintf(log_line, "%0" MACRO_STRINGIFY(WIDTH_PID) "d" " %.3s\n", getpid(), err);
+    write(clog_descriptor, log_line, strlen(log_line));
 }

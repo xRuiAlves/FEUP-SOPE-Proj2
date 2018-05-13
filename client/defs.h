@@ -34,6 +34,7 @@ typedef unsigned long u_long;
 #define WIDTH_XXNN          (WIDTH_XX + WIDTH_NN + 1)
 #define WIDTH_SEAT          4
 #define MESSAGE_MAX_SIZE    4096
+#define CLOG_MSG_MAX_SIZE   (WIDTH_PID + WIDTH_XXNN + WIDTH_SEAT + 3)
 
 
 #endif  // _DEFS_H_
