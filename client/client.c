@@ -93,6 +93,9 @@ void get_server_response(u_int time_out, char fifo_name[WIDTH_FIFO_NAME]) {
         exit(READ_SERVER_ANS_ERROR);
     }
 
+    // Message received, cancel the alarm
+    alarm(0);
+
     // Parse the server message
     char** parsed_message_str;
     size_t message_len;
