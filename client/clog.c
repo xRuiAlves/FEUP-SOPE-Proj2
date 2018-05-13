@@ -8,11 +8,12 @@
 
 FILE *fp = NULL;
 
-/*int main(){
+int main(){
   const char* fileName = "clog.txt";
   fp = fopen(fileName,"a");
   if(fp == NULL){
     //error opening file
+    fprintf(stderr, "Error opening file.\n");
     return -1;
   }
 
@@ -26,52 +27,46 @@ FILE *fp = NULL;
   writeinLog(answer3);
   writeinLog(answer4);
   return 0;
-}*/
+}
 
 void writeinLog(int answer[]) {
-  if(answer[0] > 0)
-  {
+  if(answer[0] > 0) {
     int i;
     int n_seats = answer[0];
-    for(i=1;i<=n_seats;i++){
-      fprintf(fp,"%.5d %.2d.%.2d %.4d \n",getpid(),i,n_seats, answer[i]);
+    for(i=1 ; i<=n_seats ; i++) {
+      fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_PID) "d ", getpid());
+      fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_XX) "d.",i);
+      fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_NN) "d ", n_seats);
+      fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n", answer[i]);
       fflush(fp);
     }
-
   }
   else {
     int errorNo = answer[0];
-    switch(errorNo){
+      switch(errorNo){
       case MAX:
-      writeError("MAX");
-      break;
-
+        writeError("MAX");
+        break;
       case NST:
-      writeError("NST");;
-      break;
-
+        writeError("NST");;
+        break;
       case IID:
-      writeError("IID");
-      break;
-
+        writeError("IID");
+        break;
       case ERR:
-      writeError("ERR");
-      break;
-
+        writeError("ERR");
+        break;
       case NAV:
-      writeError("NAV");
-      break;
-
+        writeError("NAV");
+        break;
       case FUL:
-      writeError("FUL");
-      break;
-
-
+        writeError("FUL");
+        break;
     }
   }
 }
 
 void writeError(char err[]){
-  fprintf(fp,"%.5d %.3s \n",getpid(),err);
+  fprintf(fp,"%0" MACRO_STRINGIFY(WIDTH_PID) "d" " %.3s\n",getpid(),err);
   fflush(fp);
 }
