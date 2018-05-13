@@ -19,11 +19,11 @@
 
 //Delay in request processing simulation
 #include <unistd.h>
-#define DELAY() usleep(200*1000);
+#define DELAY() usleep(50*1000);
 
 #define MAX_MESSAGE_SIZE 512
-#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     50
-#define NON_BLOCKING_SEM_WAIT_DELAY_MS      50
+#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     20
+#define NON_BLOCKING_SEM_WAIT_DELAY_MS      20
 
 // Stringification Macros
 #define MACRO_STRINGIFY_(X) #X
