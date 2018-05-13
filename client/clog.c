@@ -6,6 +6,7 @@
 #include <string.h>
 #include "defs.h"
 #include "clog.h"
+#include "cbook.h"
 
 static int clog_descriptor;
 
@@ -30,6 +31,8 @@ void writeinLog(int answer[]) {
         int n_seats = answer[0];
         char log_line[CLOG_MSG_MAX_SIZE];
 
+        open_cbook_file();
+
         for(i=1 ; i<=n_seats ; i++) {
             log_line[0] = '\0';
             sprintf(log_line, "%0" MACRO_STRINGIFY(WIDTH_PID) "d "
@@ -38,7 +41,10 @@ void writeinLog(int answer[]) {
                               "%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n",
                               getpid(), i, n_seats, answer[i]);
             write(clog_descriptor, log_line, strlen(log_line));
+            writeinBookLog(answer[i]);
         }
+
+        close_cbook_file();
     }
 
     // Write error message in the log file
