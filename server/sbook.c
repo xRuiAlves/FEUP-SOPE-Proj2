@@ -20,7 +20,6 @@ void open_sbook_file() {
     }
 }
 void close_sbook_file() {
-    // Close cbook file
     close(sbook_descriptor);
 }
 

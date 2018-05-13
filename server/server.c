@@ -13,6 +13,8 @@
 #include <limits.h>
 #include "seats.h"
 #include <errno.h>
+#include "sbook.h"
+#include "slog.h"
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -41,7 +43,7 @@ int main(int argc, char * argv[]) {
         print_usage(stderr, argv[0]);
         return -3;
     }
-    
+
     //Criar fifo de requests
     if(mkfifo("requests", 0660) != 0) {
         fprintf(stderr, "Error creating requests fifo\n");
@@ -64,6 +66,10 @@ int main(int argc, char * argv[]) {
         }
     }
 
+    // Open log files
+    open_slog_file();
+    open_sbook_file();
+
     //Busy listen no fifo de requests
     listen_for_requests(open_time);
     //Colocar num buffer unitário para threads irem buscar (feito acima)
@@ -77,7 +83,7 @@ int main(int argc, char * argv[]) {
      *     a - quantidade de lugares a reservar (num_wanted_seats) está na gama [1..MAX_CLI_SEATS]
      *     b - número de lugares preferidos está na gama [num_wanted_seats..MAX_CLI_SEATS]
      * 2 - Se for válido, executar pedido
-     *     a - 
+     *     a -
      * 3 - Responder ao cliente pelo fifo criado por ele (ver valores de erro) com uma resposta no formato <n_lugares_reservados> <lista de lugares reservados> se não ocorrer erro
      */
 
@@ -99,6 +105,10 @@ int main(int argc, char * argv[]) {
     if(finish_sync() != 0) {
         fprintf(stderr, "Error in closing synchronization mechanisms!\n");
     }
+
+    // Close log files
+    close_slog_file();
+    close_sbook_file();
 
     return 0;
 }
@@ -168,7 +178,7 @@ int listen_for_requests(int open_time_s) {
             }
             printf("Concluded reading of message with %d chars: %s\n", n_chars_read, read_buffer);
         } while(n_chars_read == 0 && difftime(time(NULL), start_time) <= open_time_s);
-        
+
         //Because it is possible to exit the internal loop with nothing read (time has ended)
         if(n_chars_read > 0) {
             printf("Actual data was read, writing to buffer\n");

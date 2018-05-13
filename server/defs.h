@@ -8,7 +8,6 @@
 #define ERR -4 /*Other parameter error*/
 #define NAV -5 /*At least one of the desired seats cannot be placed, seat not available*/
 #define FUL -6 /*Room full*/
-#define OUT -7
 
 // Server Data Macros
 #define MAX_ROOM_SEATS  9999

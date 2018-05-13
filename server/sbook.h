@@ -9,7 +9,6 @@ void open_sbook_file();
 /**
   * Closes the server book log file
   */
-
 void close_sbook_file();
 
 /**
