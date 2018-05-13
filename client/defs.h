@@ -13,6 +13,7 @@ typedef unsigned long u_long;
 #define NAV -5
 #define FUL -6
 #define FIFO_CREATION_ERROR 1
+#define CLOG_OPENING_ERROR  2
 
 // Stringification Macros
 #define MACRO_STRINGIFY_(X) #X
