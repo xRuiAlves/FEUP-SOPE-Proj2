@@ -44,6 +44,10 @@ int main(int argc, char * argv[]) {
         return -3;
     }
 
+    // Open log files
+    open_slog_file();
+    open_sbook_file();
+
     //Criar fifo de requests
     if(mkfifo("requests", 0660) != 0) {
         fprintf(stderr, "Error creating requests fifo\n");
@@ -65,10 +69,6 @@ int main(int argc, char * argv[]) {
             fprintf(stderr, "Error creating thread %d\n", i);
         }
     }
-
-    // Open log files
-    open_slog_file();
-    open_sbook_file();
 
     //Busy listen no fifo de requests
     listen_for_requests(open_time);

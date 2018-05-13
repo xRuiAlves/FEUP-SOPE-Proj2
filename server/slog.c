@@ -58,7 +58,6 @@ void writetoServerLog(ClientMessage cmess,unsigned int tid, int n_reserved_seats
       writeinSBookLog(reserved_seats[i]);
     }
     sprintf(log_line,"\n");
-    printf("Stuff: %s\n", log_line);
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
