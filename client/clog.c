@@ -57,9 +57,8 @@ void writeinLog(int answer[]) {
         case FUL:
             writeError("FUL");
             break;
-        }
         case OUT:
-            writeError("FUL");
+            writeError("OUT");
             break;
         }
     }
