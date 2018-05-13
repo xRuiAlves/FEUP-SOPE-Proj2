@@ -10,6 +10,10 @@ typedef struct {
 
 void initNrAvailableSeats(unsigned int n_available_seats);
 
+unsigned int getNrAvailableSeats();
+
+unsigned int getPossibleMaxID();
+
 /**
  * Returns 1 if seat is free, 0 if it is taken, 2 if room is full and -1 in case of error
  */

@@ -21,7 +21,7 @@
 #define DELAY() usleep(200*1000);
 
 #define MAX_MESSAGE_SIZE 512
-#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     200
-#define NON_BLOCKING_SEM_WAIT_DELAY_MS      200 
+#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     50
+#define NON_BLOCKING_SEM_WAIT_DELAY_MS      50 
 
 #endif  // _DEFS_H_

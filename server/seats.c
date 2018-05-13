@@ -3,13 +3,23 @@
 #include <stdio.h>
 
 static unsigned int num_available_seats = MAX_ROOM_SEATS;
+static unsigned int possible_max_id = MAX_ROOM_SEATS;
 
 void initNrAvailableSeats(unsigned int n_available_seats) {
     num_available_seats = n_available_seats;
+    possible_max_id = n_available_seats;
+}
+
+unsigned int getNrAvailableSeats() {
+    return num_available_seats;
+}
+
+unsigned int getPossibleMaxID() {
+    return possible_max_id;
 }
 
 int isSeatFree(Seat *seats, int seatNum) {
-    if(seatNum > MAX_ROOM_SEATS) {
+    if(seatNum > possible_max_id) {
         return -1;
     }
 
@@ -25,7 +35,7 @@ int isSeatFree(Seat *seats, int seatNum) {
 }
 
 void bookSeat(Seat *seats, int seatNum, int clientId) {
-    if(seatNum > MAX_ROOM_SEATS || seats[seatNum-1].isTaken) {
+    if(seatNum > possible_max_id || seats[seatNum-1].isTaken) {
         printf("Error in booking seat number %d for client number %d\n", seatNum, clientId);
         return;
     }
@@ -39,7 +49,7 @@ void bookSeat(Seat *seats, int seatNum, int clientId) {
 }
 
 void freeSeat(Seat *seats, int seatNum) {
-    if(seatNum > MAX_ROOM_SEATS || !seats[seatNum-1].isTaken) {
+    if(seatNum > possible_max_id || !seats[seatNum-1].isTaken) {
         printf("Error in freeing seat number %d\n", seatNum);
         return;
     }

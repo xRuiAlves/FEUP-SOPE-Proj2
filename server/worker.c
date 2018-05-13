@@ -5,6 +5,7 @@
 #include "buffer.h"
 #include "parser.h"
 #include <limits.h>
+#include "communication.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -50,6 +51,14 @@ void * startWorking(void * args) {
         if(parse_status != 0) {
             printf("Parsing of client message failed with status %d\n", parse_status);
             //Handle error response, reply to client if need be, etc
+            if(parse_status < 0) {
+                //"Replyable" error
+                replyToClient_error(cmess.pid, parse_status);
+            } else {
+                //"Unreplyable" error
+                fprintf(stderr, "Critical error: Cannot reply to client...\n");
+            }
+
             continue;
         }
 
@@ -62,27 +71,32 @@ void * startWorking(void * args) {
         unsigned int reserved_seats[cmess.num_wanted_seats];
         //Requesting lock on seats mutex
         lock_seats_mutex();
-        for(i = 0; i < cmess.num_pref_seats; ++i) {
-            if(num_reserved_seats == cmess.num_wanted_seats) {
-                break;
-            }
+        if(cmess.num_wanted_seats > getNrAvailableSeats()) {
+            //Room would be full, FUL error
+            replyToClient_error(cmess.pid, FUL);
+        } else {
+            for(i = 0; i < cmess.num_pref_seats; ++i) {
+                if(num_reserved_seats == cmess.num_wanted_seats) {
+                    break;
+                }
 
-            seat_free_status = isSeatFree(seats, cmess.pref_seats[i]);
-            if(seat_free_status == 2) {
-                //Room is full, break
-                break;
-            }
+                seat_free_status = isSeatFree(seats, cmess.pref_seats[i]);
+                if(seat_free_status == 2) {
+                    //Room is full, break
+                    break;
+                }
 
-            if(seat_free_status == 1) {
-                //Seat is free, book it
-                bookSeat(seats, cmess.pref_seats[i], cmess.pid);
-                reserved_seats[num_reserved_seats++] = cmess.pref_seats[i];
+                if(seat_free_status == 1) {
+                    //Seat is free, book it
+                    bookSeat(seats, cmess.pref_seats[i], cmess.pid);
+                    reserved_seats[num_reserved_seats++] = cmess.pref_seats[i];
+                }
             }
-        }
-        if(num_reserved_seats < cmess.num_wanted_seats) {
-            //Request failed, unbook seats
-            for(i = 0; i < num_reserved_seats; ++i) {
-                freeSeat(seats, reserved_seats[i]);
+            if(num_reserved_seats < cmess.num_wanted_seats) {
+                //Request failed, unbook seats
+                for(i = 0; i < num_reserved_seats; ++i) {
+                    freeSeat(seats, reserved_seats[i]);
+                }
             }
         }
         unlock_seats_mutex();
@@ -90,15 +104,15 @@ void * startWorking(void * args) {
         if(seat_free_status == 2) {
             printf("Room was full at some point during resevation\n");
             //Failure with FUL
-            //Write response
+            replyToClient_error(cmess.pid, FUL);
         } else if(num_reserved_seats < cmess.num_wanted_seats) {
             printf("At least one wanted seat could not be booked\n");
             //Failure with NAV
-            //Write response
+            replyToClient_error(cmess.pid, NAV);
         } else {
             printf("All seats were booked successfully!\n");
             //Success
-            //Write response
+            replyToClient_success(cmess.pid, num_reserved_seats, reserved_seats);
         }
     }
 
@@ -123,10 +137,10 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
     }
 
     ////Format of client message is:
-    ///"<pid> <num_wanted_seats> <num_pref_seats> <s1> <s2> ... <sN>\n"
+    ///"<pid> <num_wanted_seats> <s1> <s2> ... <sN>\n"
 
-    if(split_data_len < 4) {
-        //4 is the minimum number of message fields for it to be valid
+    if(split_data_len < 3) {
+        //3 is the minimum number of message fields for it to be valid
         error_status = ERR;
         goto free_and_exit;
     }
@@ -141,30 +155,23 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
     cmessage->pid = pid;
     unsigned int num_wanted_seats = parse_unsigned_int(split_data[1]);
     if(num_wanted_seats == UINT_MAX || num_wanted_seats == 0) {
-        error_status = NST;
+        error_status = ERR;
         goto free_and_exit;
     } else if(num_wanted_seats > MAX_CLI_SEATS) {
         error_status = MAX;
         goto free_and_exit;
     }
-    unsigned int num_pref_seats = parse_unsigned_int(split_data[2]);
-    if(num_pref_seats == UINT_MAX || num_pref_seats == 0) {
-        error_status = ERR;
-        goto free_and_exit;
-    }
-
-    if(split_data_len - 3 != num_pref_seats) {
-        //Seat list does not correspond to passed number of preferred seats
-        error_status = ERR;
+    unsigned int num_pref_seats = split_data_len - 2;
+    if(num_pref_seats < num_wanted_seats) {
+        error_status = NST;
         goto free_and_exit;
     }
 
     //Parsing the seat list itself
     int i;
     for(i = 0; i < num_pref_seats; ++i) {
-        cmessage->pref_seats[i] = parse_unsigned_int(split_data[i+3]);
-        if(cmessage->pref_seats[i] == UINT_MAX || cmessage->pref_seats[i] > MAX_ROOM_SEATS) {
-            //TODO: Verify if being bigger than maxroomseats is IID, ERR or NAV
+        cmessage->pref_seats[i] = parse_unsigned_int(split_data[i+2]);
+        if(cmessage->pref_seats[i] == UINT_MAX  || cmessage->pref_seats[i] == 0 || cmessage->pref_seats[i] > getPossibleMaxID()) {
             error_status = IID;
             goto free_and_exit;
         }
