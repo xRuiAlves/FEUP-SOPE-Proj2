@@ -1,0 +1,8 @@
+#MAKE .DEPEND FILE
+client.o: client.c defs.h client.h request_message.h alarm.h clog.h \
+ parser.h
+clog.o: clog.c defs.h clog.h cbook.h
+parser.o: parser.c parser.h defs.h
+alarm.o: alarm.c alarm.h defs.h clog.h
+request_message.o: request_message.c request_message.h defs.h
+cbook.o: cbook.c defs.h cbook.h

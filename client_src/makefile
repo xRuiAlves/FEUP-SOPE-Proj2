@@ -1,8 +1,8 @@
 CC=gcc
 RM=rm -f
 
-CFLAGS=-g -Wall -I. -D_GNU_SOURCE -D_REENTRANT -pthread
-LDFLAGS=-g -pthread
+CFLAGS=-g -Wall -I. -D_GNU_SOURCE
+LDFLAGS=-g
 LDLIBS=
 
 #Depend file stuff
@@ -16,7 +16,7 @@ OBJS=$(subst .c,.o,$(SRCS))
 all: main
 
 main: $(OBJS)
-	$(CC) $(LDFLAGS) -o server.out $(OBJS) $(LDLIBS)
+	$(CC) $(LDFLAGS) -o client $(OBJS) $(LDLIBS)
 
 depend: $(DEPFILE)
 
