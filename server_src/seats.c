@@ -14,7 +14,7 @@ unsigned int getNrAvailableSeats() {
     return num_available_seats;
 }
 
-unsigned int getPossibleMaxID() {
+unsigned int getMaxPossibleSeatID() {
     return possible_max_id;
 }
 

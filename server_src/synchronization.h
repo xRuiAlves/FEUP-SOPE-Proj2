@@ -13,7 +13,7 @@ int try_wait_has_data_sem();
 void signal_has_data_sem();
 void wait_can_send_data_sem();
 void signal_can_send_data_sem();
-void lock_seats_mutex();
-void unlock_seats_mutex();
+void lock_seats_mutex(unsigned int seatID);
+void unlock_seats_mutex(unsigned int seatID);
 
 #endif  // _SYNCHRONIZATION_H_

@@ -66,43 +66,34 @@ void * startWorking(void * args) {
         int num_reserved_seats = 0;
         int seat_free_status;
         unsigned int reserved_seats[cmess.num_wanted_seats];
-        //Requesting lock on seats mutex
-        lock_seats_mutex();
-        if(cmess.num_wanted_seats > getNrAvailableSeats()) {
-            //Room would be full, FUL error
-            replyToClient_error(cmess.pid, FUL);
-            seat_free_status = -1;
-            writetoServerLogError(cmess, myID, FUL);
-        } else {
-            for(i = 0; i < cmess.num_pref_seats; ++i) {
-                if(num_reserved_seats == cmess.num_wanted_seats) {
-                    break;
-                }
 
-                seat_free_status = isSeatFree(seats, cmess.pref_seats[i]);
-                if(seat_free_status == 2) {
-                    //Room is full, break
-                    break;
-                }
+        for(i = 0; i < cmess.num_pref_seats; ++i) {
+            if(num_reserved_seats == cmess.num_wanted_seats) {
+                break;
+            }
 
-                if(seat_free_status == 1) {
-                    //Seat is free, book it
-                    bookSeat(seats, cmess.pref_seats[i], cmess.pid);
-                    reserved_seats[num_reserved_seats++] = cmess.pref_seats[i];
-                }
+            lock_seats_mutex(cmess.pref_seats[i]);
+            seat_free_status = isSeatFree(seats, cmess.pref_seats[i]);
+            if(seat_free_status == 2) {
+                //Room is full, break
+                unlock_seats_mutex(cmess.pref_seats[i]);
+                break;
             }
-            if(num_reserved_seats < cmess.num_wanted_seats) {
-                //Request failed, unbook seats
-                for(i = 0; i < num_reserved_seats; ++i) {
-                    freeSeat(seats, reserved_seats[i]);
-                }
+
+            if(seat_free_status == 1) {
+                //Seat is free, book it
+                bookSeat(seats, cmess.pref_seats[i], cmess.pid);
+                reserved_seats[num_reserved_seats++] = cmess.pref_seats[i];
             }
+            unlock_seats_mutex(cmess.pref_seats[i]);
         }
-        unlock_seats_mutex();
-
-        if(seat_free_status == -1) {
-            //Error already dealt with
-            continue;
+        if(num_reserved_seats < cmess.num_wanted_seats) {
+            //Request failed, unbook seats
+            for(i = 0; i < num_reserved_seats; ++i) {
+                lock_seats_mutex(reserved_seats[i]);
+                freeSeat(seats, reserved_seats[i]);
+                unlock_seats_mutex(reserved_seats[i]);
+            }
         }
 
         if(seat_free_status == 2) {
@@ -173,7 +164,7 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
     int i;
     for(i = 0; i < num_pref_seats; ++i) {
         cmessage->pref_seats[i] = parse_unsigned_int(split_data[i+2]);
-        if(cmessage->pref_seats[i] == UINT_MAX  || cmessage->pref_seats[i] == 0 || cmessage->pref_seats[i] > getPossibleMaxID()) {
+        if(cmessage->pref_seats[i] == UINT_MAX  || cmessage->pref_seats[i] == 0 || cmessage->pref_seats[i] > getMaxPossibleSeatID()) {
             error_status = IID;
         }
     }

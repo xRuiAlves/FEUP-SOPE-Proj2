@@ -4,10 +4,12 @@
 #include <pthread.h>
 #include "buffer.h"
 #include <errno.h>
+#include "defs.h"
+#include "seats.h"
 
 static sem_t has_data_sem;
 static sem_t can_send_data_sem;
-static pthread_mutex_t seats_mutex;
+static pthread_mutex_t seats_mutex[MAX_ROOM_SEATS];
 
 int init_sync() {
     if(sem_init(&has_data_sem, 0, 0) != 0) {
@@ -18,8 +20,11 @@ int init_sync() {
         return -2;
     }
     
-    if(pthread_mutex_init(&seats_mutex, NULL) != 0) {
-        return -3;
+    int i;
+    for(i = 0; i < getMaxPossibleSeatID(); ++i) {
+        if(pthread_mutex_init(&seats_mutex[i], NULL) != 0) {
+            return -3;
+        }
     }
     
     return 0;
@@ -35,8 +40,11 @@ int finish_sync() {
     }
 
     //destroying mutex
-    if(pthread_mutex_destroy(&seats_mutex) != 0) {
-        return -3;
+    int i;
+    for(i = 0; i < getMaxPossibleSeatID(); ++i) {
+        if(pthread_mutex_destroy(&seats_mutex[i]) != 0) {
+            return -3;
+        }
     }
 
     return 0;
@@ -78,14 +86,14 @@ void signal_can_send_data_sem() {
     }
 }
 
-void lock_seats_mutex() {
-    if(pthread_mutex_lock(&seats_mutex) != 0 ) {
-        fprintf(stderr, "Error in locking seats mutex!\n");
+void lock_seats_mutex(unsigned int seatID) {
+    if(pthread_mutex_lock(&seats_mutex[seatID]) != 0 ) {
+        fprintf(stderr, "Error in locking seats mutex for seat ID %u!\n", seatID);
     }
 }
 
-void unlock_seats_mutex() {
-    if(pthread_mutex_unlock(&seats_mutex) != 0) {
-        fprintf(stderr, "Error in unlocking seats mutex!\n");
+void unlock_seats_mutex(unsigned int seatID) {
+    if(pthread_mutex_unlock(&seats_mutex[seatID]) != 0) {
+        fprintf(stderr, "Error in unlocking seats mutex for seat ID %u!\n", seatID);
     }
 }
