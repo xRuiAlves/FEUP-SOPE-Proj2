@@ -184,7 +184,6 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
         cmessage->pref_seats[i] = parse_unsigned_int(split_data[i+2]);
         if(cmessage->pref_seats[i] == UINT_MAX  || cmessage->pref_seats[i] == 0 || cmessage->pref_seats[i] > getPossibleMaxID()) {
             error_status = IID;
-            goto free_and_exit;
         }
     }
 
