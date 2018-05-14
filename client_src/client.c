@@ -49,16 +49,6 @@ int main(int argc, char* argv[]) {
     // Create request message
     RequestMessage msg = create_request_message(getpid(), num_wanted_seats, parsed_pref_seat_list, num_pref_seats);
 
-    printf("Timeout value: %u\n", time_out);
-    printf("Number of Wanted Seats: %u\n", msg.num_wanted_seats);
-    printf("PID: %u\n", msg.pid);
-    printf("Number of prefered seats: %u\n", msg.num_pref_seats);
-    printf("Prefered Seats:\n");
-    int i;
-    for (i=0 ; i<msg.num_pref_seats ; i++) {
-        printf("\t%u\n",  msg.pref_seat_list[i]);
-    }
-
     // Broadcast message to server
     broadcast_message(msg);
 
