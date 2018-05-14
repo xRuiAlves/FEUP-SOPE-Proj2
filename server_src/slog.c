@@ -45,7 +45,11 @@ void writeServerClosing() {
 void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seats, unsigned int reserved_seats[]) {
     char log_line[BUFF_SIZE];
     char num_str[20];
+    int num_spaces = MAX_CLI_SEATS * (WIDTH_SEAT+1);
+    char seats_buf[MAX_CLI_SEATS * (WIDTH_SEAT+1)];
     log_line[0] = '\0';
+    seats_buf[0] = '\0';
+
     sprintf(log_line, "%02u"
                       "-"
                       "%0" MACRO_STRINGIFY(WIDTH_PID) "d"
@@ -56,13 +60,24 @@ void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seat
     int i;
     for(i=0;i<cmess.num_pref_seats;i++){
       sprintf(num_str,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d ", cmess.pref_seats[i]);
-      strcat(log_line, num_str);
+      strcat(seats_buf, num_str);
     }
+    strcat(log_line, seats_buf);
+    for (i=strlen(seats_buf) ; i<num_spaces ; i++) {    // Fill with spaces
+        strcat(log_line, " ");
+    }
+
     strcat(log_line, "-");
+
+    seats_buf[0] = '\0';
     for(i=0;i<n_reserved_seats;i++){
       sprintf(num_str," %0" MACRO_STRINGIFY(WIDTH_SEAT) "d", reserved_seats[i]);
-      strcat(log_line, num_str);
+      strcat(seats_buf, num_str);
       writeinSBookLog(reserved_seats[i]);
+    }
+    strcat(log_line, seats_buf);
+    for (i=strlen(seats_buf) ; i<num_spaces ; i++) {    // Fill with spaces
+        strcat(log_line, " ");
     }
     strcat(log_line,"\n");
     write(slog_descriptor, log_line, strlen(log_line));
@@ -71,7 +86,11 @@ void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seat
 void writetoServerLogError(ClientMessage cmess, unsigned int tid, int error_status){
   char log_line[BUFF_SIZE];
   char num_str[20];
+  int num_spaces = MAX_CLI_SEATS * (WIDTH_SEAT+1);
+  char seats_buf[MAX_CLI_SEATS * (WIDTH_SEAT+1)];
   log_line[0] = '\0';
+  seats_buf[0] = '\0';
+
   sprintf(log_line, "%02u"
                     "-"
                     "%0" MACRO_STRINGIFY(WIDTH_PID) "d"
@@ -82,9 +101,14 @@ void writetoServerLogError(ClientMessage cmess, unsigned int tid, int error_stat
   int i;
   for(i=0;i<cmess.num_pref_seats;i++){
     sprintf(num_str, "%0" MACRO_STRINGIFY(WIDTH_SEAT) "d ", cmess.pref_seats[i]);
-    strcat(log_line, num_str);
+    strcat(seats_buf, num_str);
+  }
+  strcat(log_line, seats_buf);
+  for (i=strlen(seats_buf) ; i<num_spaces ; i++) {    // Fill with spaces
+      strcat(log_line, " ");
   }
   strcat(log_line, "- ");
+
   switch(error_status) {
   case MAX:
       strcat(log_line, "MAX\n");
