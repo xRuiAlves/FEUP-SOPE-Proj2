@@ -16,7 +16,7 @@ OBJS=$(subst .c,.o,$(SRCS))
 all: main
 
 main: $(OBJS)
-	$(CC) $(LDFLAGS) -o server.out $(OBJS) $(LDLIBS)
+	$(CC) $(LDFLAGS) -o server $(OBJS) $(LDLIBS)
 
 depend: $(DEPFILE)
 

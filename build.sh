@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-cd server
+cd server_src
 make clean; make
-mv server.out ..
-cd ../client
+mv server ..
+cd ../client_src
 make clean; make
-mv client.out ..
+mv client ..
 
