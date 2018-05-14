@@ -163,12 +163,10 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
         goto free_and_exit;
     } else if(num_wanted_seats > MAX_CLI_SEATS) {
         error_status = MAX;
-        goto free_and_exit;
     }
     unsigned int num_pref_seats = split_data_len - 2;
     if(num_pref_seats < num_wanted_seats) {
         error_status = NST;
-        goto free_and_exit;
     }
 
     //Parsing the seat list itself
