@@ -29,7 +29,7 @@ int main(int argc, char * argv[]) {
         print_usage(stderr, argv[0]);
         return -3;
     }
-    printf("Initializing room with %u seats\n", num_room_seats);
+    //printf("Initializing room with %u seats\n", num_room_seats);
     initNrAvailableSeats(num_room_seats);
     unsigned int num_ticket_offices = parse_unsigned_int(argv[2]);
     if(num_ticket_offices == UINT_MAX || num_ticket_offices == 0) {
@@ -64,7 +64,7 @@ int main(int argc, char * argv[]) {
     pthread_t t_ids[num_ticket_offices];
     int i;
     for(i = 0; i < num_ticket_offices; ++i) {
-        printf("Creating thread number %d\n", i);
+        //printf("Creating thread number %d\n", i);
         if(pthread_create(&(t_ids[i]), NULL, startWorking, NULL) != 0) {
             fprintf(stderr, "Error creating thread %d\n", i);
         }

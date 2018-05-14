@@ -35,7 +35,8 @@ void writeinLog(int answer[]) {
 
         for(i=1 ; i<=n_seats ; i++) {
             log_line[0] = '\0';
-            sprintf(log_line, "%0" MACRO_STRINGIFY(WIDTH_PID) "d "
+            snprintf(log_line, CLOG_MSG_MAX_SIZE,
+                              "%0" MACRO_STRINGIFY(WIDTH_PID) "d "
                               "%0" MACRO_STRINGIFY(WIDTH_XX) "d."
                               "%0" MACRO_STRINGIFY(WIDTH_NN) "d "
                               "%0" MACRO_STRINGIFY(WIDTH_SEAT) "d\n",
