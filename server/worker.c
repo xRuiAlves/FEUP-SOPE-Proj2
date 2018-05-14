@@ -14,12 +14,15 @@
 
 static Seat seats[MAX_ROOM_SEATS];
 static int worker_status = WORKER_RUNNING;
+static unsigned int num_workers = 0;
 
 static int parse_client_message(char * client_data, ClientMessage * cmessage);
 
 void * startWorking(void * args) {
     printf("Worker created\n");
-    writeServerWorkerCreating(pthread_self());
+
+    unsigned int myID = ++num_workers;
+    writeServerWorkerCreating(myID);
 
     char * mydata;
     ClientMessage cmess;
@@ -50,7 +53,7 @@ void * startWorking(void * args) {
             if(parse_status < 0) {
                 //"Replyable" error
                 replyToClient_error(cmess.pid, parse_status);
-                writetoServerLogError(cmess,pthread_self(),parse_status);
+                writetoServerLogError(cmess, myID, parse_status);
             } else {
                 //"Unreplyable" error
                 fprintf(stderr, "Critical error: Cannot reply to client...\n");
@@ -72,7 +75,7 @@ void * startWorking(void * args) {
             //Room would be full, FUL error
             replyToClient_error(cmess.pid, FUL);
             seat_free_status = -1;
-            writetoServerLogError(cmess,pthread_self(),FUL);
+            writetoServerLogError(cmess, myID, FUL);
         } else {
             for(i = 0; i < cmess.num_pref_seats; ++i) {
                 if(num_reserved_seats == cmess.num_wanted_seats) {
@@ -109,22 +112,22 @@ void * startWorking(void * args) {
             printf("Room was full at some point during resevation\n");
             //Failure with FUL
             replyToClient_error(cmess.pid, FUL);
-            writetoServerLogError(cmess,pthread_self(),FUL);
+            writetoServerLogError(cmess, myID, FUL);
         } else if(num_reserved_seats < cmess.num_wanted_seats) {
             printf("At least one wanted seat could not be booked\n");
             //Failure with NAV
             replyToClient_error(cmess.pid, NAV);
-            writetoServerLogError(cmess,pthread_self(),NAV);
+            writetoServerLogError(cmess, myID, NAV);
         } else {
             printf("All seats were booked successfully!\n");
             //Success
             replyToClient_success(cmess.pid, num_reserved_seats, reserved_seats);
-            writetoServerLog(cmess,pthread_self(),num_reserved_seats, reserved_seats);
+            writetoServerLog(cmess, myID, num_reserved_seats, reserved_seats);
         }
     }
 
     //printf("Worker exiting\n");
-    writeServerWorkerClosing(pthread_self());
+    writeServerWorkerClosing(myID);
     return NULL;
 }
 

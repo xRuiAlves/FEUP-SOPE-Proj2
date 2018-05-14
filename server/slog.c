@@ -27,14 +27,14 @@ void close_slog_file() {
 
 void writeServerWorkerCreating(unsigned int tid) {
     char log_line[50];
-    sprintf(log_line, "%u-OPEN\n", tid);
+    sprintf(log_line, "%02u-OPEN\n", tid);
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
 
 void writeServerWorkerClosing(unsigned int tid) {
     char log_line[50];
-    sprintf(log_line, "%u-CLOSED\n", tid);
+    sprintf(log_line, "%02u-CLOSED\n", tid);
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
@@ -42,7 +42,7 @@ void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seat
     char log_line[BUFF_SIZE];
     char num_str[20];
     log_line[0] = '\0';
-    sprintf(log_line, "%u"
+    sprintf(log_line, "%02u"
                       "-"
                       "%0" MACRO_STRINGIFY(WIDTH_PID) "d"
                       "-"
@@ -68,7 +68,7 @@ void writetoServerLogError(ClientMessage cmess, unsigned int tid, int error_stat
   char log_line[BUFF_SIZE];
   char num_str[20];
   log_line[0] = '\0';
-  sprintf(log_line, "%u"
+  sprintf(log_line, "%02u"
                     "-"
                     "%0" MACRO_STRINGIFY(WIDTH_PID) "d"
                     "-"
