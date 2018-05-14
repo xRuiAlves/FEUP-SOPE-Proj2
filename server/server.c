@@ -49,7 +49,7 @@ int main(int argc, char * argv[]) {
     open_sbook_file();
 
     //Criar fifo de requests
-    if(mkfifo("requests", 0660) != 0) {
+    if(mkfifo(REQUEST_FIFO_NAME, 0660) != 0) {
         fprintf(stderr, "Error creating requests fifo\n");
         return -2;
     }
@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
 
     //Fim do main thread:
     //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
-    unlink("requests");
+    unlink(REQUEST_FIFO_NAME);
     //Informar os threads que devem terminar
     printf("Signaling threads they should end\n");
     set_worker_status(WORKER_STOP);
@@ -146,7 +146,7 @@ static int readline_until_char(int fd, char buffer[], char delim) {
 }
 
 int listen_for_requests(int open_time_s) {
-    int fifo_read_fd = open("requests", O_RDONLY | O_NONBLOCK);
+    int fifo_read_fd = open(REQUEST_FIFO_NAME, O_RDONLY | O_NONBLOCK);
     char read_buffer[MAX_MESSAGE_SIZE];
     int n_chars_read = 0;
     time_t start_time;
