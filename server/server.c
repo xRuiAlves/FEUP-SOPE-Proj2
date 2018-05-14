@@ -107,6 +107,7 @@ int main(int argc, char * argv[]) {
     }
 
     // Close log files
+    writeServerClosing();
     close_slog_file();
     close_sbook_file();
 

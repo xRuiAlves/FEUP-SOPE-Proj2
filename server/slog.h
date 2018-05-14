@@ -26,6 +26,11 @@ void writeServerWorkerCreating(unsigned int tid);
 void writeServerWorkerClosing(unsigned int tid);
 
 /**
+  * Writes a message identifying server closing
+  */
+void writeServerClosing();
+
+/**
   * Writes a server error log message in the server log file
   *
   * @param cmess Client message

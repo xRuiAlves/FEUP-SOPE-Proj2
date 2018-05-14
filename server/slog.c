@@ -31,11 +31,15 @@ void writeServerWorkerCreating(unsigned int tid) {
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
-
 void writeServerWorkerClosing(unsigned int tid) {
     char log_line[50];
     sprintf(log_line, "%02u-CLOSED\n", tid);
     write(slog_descriptor, log_line, strlen(log_line));
+}
+
+void writeServerClosing() {
+    const char* closingMsg = "SERVER CLOSED\n";
+    write(slog_descriptor, closingMsg, strlen(closingMsg));
 }
 
 void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seats, unsigned int reserved_seats[]) {
