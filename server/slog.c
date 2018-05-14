@@ -38,30 +38,33 @@ void writeServerWorkerClosing(unsigned int tid) {
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
-void writetoServerLog(ClientMessage cmess,unsigned int tid, int n_reserved_seats, unsigned int reserved_seats[]) {
+void writetoServerLog(ClientMessage cmess, unsigned int tid, int n_reserved_seats, unsigned int reserved_seats[]) {
     char log_line[BUFF_SIZE];
+    char num_str[20];
     log_line[0] = '\0';
     sprintf(log_line, "%u"
                       "-"
-                      "%0" MACRO_STRINGIFY(WIDTH_PID) "d "
+                      "%0" MACRO_STRINGIFY(WIDTH_PID) "d"
                       "-"
-                      "%0" MACRO_STRINGIFY(WIDTH_NT) "d "
+                      "%0" MACRO_STRINGIFY(WIDTH_NT) "d"
                       ": ",
-                      tid, getpid(), cmess.num_wanted_seats);
+                      tid, cmess.pid, cmess.num_wanted_seats);
     int i;
     for(i=0;i<cmess.num_pref_seats;i++){
-      sprintf(log_line,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d ", cmess.pref_seats[i]);
+      sprintf(num_str,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d ", cmess.pref_seats[i]);
+      strcat(log_line, num_str);
     }
-    sprintf(log_line, "- ");
+    strcat(log_line, "-");
     for(i=0;i<n_reserved_seats;i++){
-      sprintf(log_line,"%0" MACRO_STRINGIFY(WIDTH_SEAT) "d ", reserved_seats[i]);
+      sprintf(num_str," %0" MACRO_STRINGIFY(WIDTH_SEAT) "d", reserved_seats[i]);
+      strcat(log_line, num_str);
       writeinSBookLog(reserved_seats[i]);
     }
-    sprintf(log_line,"\n");
+    strcat(log_line,"\n");
     write(slog_descriptor, log_line, strlen(log_line));
 }
 
-void writetoServerLogError(ClientMessage cmess,unsigned int tid, int error_status){
+void writetoServerLogError(ClientMessage cmess, unsigned int tid, int error_status){
   char log_line[BUFF_SIZE];
   char num_str[20];
   log_line[0] = '\0';
