@@ -19,8 +19,6 @@ static unsigned int num_workers = 0;
 static int parse_client_message(char * client_data, ClientMessage * cmessage);
 
 void * startWorking(void * args) {
-    printf("Worker created\n");
-
     unsigned int myID = ++num_workers;
     writeServerWorkerCreating(myID);
 
@@ -48,7 +46,6 @@ void * startWorking(void * args) {
         //Process data
         parse_status = parse_client_message(mydata, &cmess);
         if(parse_status != 0) {
-            printf("Parsing of client message failed with status %d\n", parse_status);
             //Handle error response, reply to client if need be, etc
             if(parse_status < 0) {
                 //"Replyable" error
@@ -109,24 +106,20 @@ void * startWorking(void * args) {
         }
 
         if(seat_free_status == 2) {
-            printf("Room was full at some point during resevation\n");
             //Failure with FUL
             replyToClient_error(cmess.pid, FUL);
             writetoServerLogError(cmess, myID, FUL);
         } else if(num_reserved_seats < cmess.num_wanted_seats) {
-            printf("At least one wanted seat could not be booked\n");
             //Failure with NAV
             replyToClient_error(cmess.pid, NAV);
             writetoServerLogError(cmess, myID, NAV);
         } else {
-            printf("All seats were booked successfully!\n");
             //Success
             replyToClient_success(cmess.pid, num_reserved_seats, reserved_seats);
             writetoServerLog(cmess, myID, num_reserved_seats, reserved_seats);
         }
     }
 
-    //printf("Worker exiting\n");
     writeServerWorkerClosing(myID);
     return NULL;
 }

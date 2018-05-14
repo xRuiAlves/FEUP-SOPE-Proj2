@@ -91,13 +91,12 @@ int main(int argc, char * argv[]) {
     //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
     unlink(REQUEST_FIFO_NAME);
     //Informar os threads que devem terminar
-    printf("Signaling threads they should end\n");
     set_worker_status(WORKER_STOP);
     //Aguardar que os threads terminem
     for(i = 0; i < num_ticket_offices; ++i) {
-        printf("Waiting for thread number %d\n", i);
+        //printf("Waiting for thread number %d\n", i);
         if(pthread_join(t_ids[i], NULL) != 0) {
-            printf("Error attempting to join thread %d\n", i);
+            fprintf(stderr, "Error attempting to join thread %d\n", i);
         }
     }
 
@@ -156,14 +155,10 @@ int listen_for_requests(int open_time_s) {
         return -1;
     }
 
-    printf("Entering reading loop\n");
-
     //time(NULL) gets the current time, so difftime compares the current time to the time when this function started
     while(difftime(time(NULL), start_time) <= open_time_s) {
-        printf("Waiting until I can send data\n");
         //Waits until potentially read data can be sent for reading
         wait_can_send_data_sem();
-        printf("I can now send data!\n");
         //Reads data
         do {
             n_chars_read = readline_until_char(fifo_read_fd, read_buffer, '\n');
@@ -177,12 +172,10 @@ int listen_for_requests(int open_time_s) {
                 usleep(CLOSED_WRITE_FIFO_WAIT_DELAY_MS * 1000);
                 continue;
             }
-            printf("Concluded reading of message with %d chars: %s\n", n_chars_read, read_buffer);
         } while(n_chars_read == 0 && difftime(time(NULL), start_time) <= open_time_s);
 
         //Because it is possible to exit the internal loop with nothing read (time has ended)
         if(n_chars_read > 0) {
-            printf("Actual data was read, writing to buffer\n");
             //Writes it to buffer
             write_to_buffer(read_buffer);
             //Signals that there is data to read
@@ -190,7 +183,6 @@ int listen_for_requests(int open_time_s) {
         }
     }
 
-    printf("Time ended, closing reading function\n");
     close(fifo_read_fd);
     return 0;
 }

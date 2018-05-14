@@ -36,7 +36,7 @@ int isSeatFree(Seat *seats, int seatNum) {
 
 void bookSeat(Seat *seats, int seatNum, int clientId) {
     if(seatNum > possible_max_id || seats[seatNum-1].isTaken) {
-        printf("Error in booking seat number %d for client number %d\n", seatNum, clientId);
+        fprintf(stderr, "Error in booking seat number %d for client number %d\n", seatNum, clientId);
         return;
     }
 
@@ -50,7 +50,7 @@ void bookSeat(Seat *seats, int seatNum, int clientId) {
 
 void freeSeat(Seat *seats, int seatNum) {
     if(seatNum > possible_max_id || !seats[seatNum-1].isTaken) {
-        printf("Error in freeing seat number %d\n", seatNum);
+        fprintf(stderr, "Error in freeing seat number %d\n", seatNum);
         return;
     }
 
