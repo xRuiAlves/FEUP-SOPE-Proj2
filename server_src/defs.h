@@ -22,7 +22,7 @@
 #define DELAY() usleep(50*1000);
 
 #define MAX_MESSAGE_SIZE 512
-#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     20
+#define CLOSED_WRITE_FIFO_WAIT_DELAY_MS     1
 #define NON_BLOCKING_SEM_WAIT_DELAY_MS      1
 
 // Stringification Macros
@@ -37,7 +37,7 @@
 #define WIDTH_FIFO_NAME     (WIDTH_PID + 3)
 
 // Logs Macros
-#define BUFF_SIZE               4096
+#define BUFF_SIZE               8192
 #define SLOG_OPENING_ERROR         2
 #define SBOOK_OPENING_ERROR        3
 

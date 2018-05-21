@@ -29,7 +29,7 @@ int main(int argc, char * argv[]) {
         print_usage(stderr, argv[0]);
         return -3;
     }
-    //printf("Initializing room with %u seats\n", num_room_seats);
+    
     initNrAvailableSeats(num_room_seats);
     unsigned int num_ticket_offices = parse_unsigned_int(argv[2]);
     if(num_ticket_offices == UINT_MAX || num_ticket_offices == 0) {
@@ -167,7 +167,6 @@ int listen_for_requests(int open_time_s) {
                 return -2;
             }
             if(n_chars_read == 0) {
-                //printf("request fifo is not open for writing\n");
                 //Sleeping for a bit to reduce waste of processing
                 usleep(CLOSED_WRITE_FIFO_WAIT_DELAY_MS * 1000);
                 continue;

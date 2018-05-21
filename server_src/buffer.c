@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "synchronization.h"
 #include <stdlib.h>
 
 static char * buffer[BUFFER_LENGTH] = {NULL};

@@ -34,36 +34,44 @@ void * startWorking(void * args) {
         }
         if(buffer_mutex_wait_status == 1) {
             //Must wait
-            usleep(NON_BLOCKING_SEM_WAIT_DELAY_MS * 1000);
             continue;
         }
 
         //Waits until there is data to read
-        wait_has_data_sem();
+        while (try_wait_has_data_sem() != 0) {
+            if (!worker_status) {
+                unlock_buffer_mutex();
+                goto finish_thread;
+            }
+        }
         mydata = read_buffer();
 
         //Signals that data can be written once again, for it has been read
         signal_can_send_data_sem();
         unlock_buffer_mutex();
 
+        if (mydata == NULL) {
+            continue;
+        }
+
         //Process data
         parse_status = parse_client_message(mydata, &cmess);
-        printf("Thread %u attending request of client %u\n", myID, cmess.pid);
-        if(parse_status != 0) {
+        if(parse_status != 0 && worker_status) {
             //Handle error response, reply to client if need be, etc
             if(parse_status < 0) {
                 //"Replyable" error
                 replyToClient_error(cmess.pid, parse_status);
                 writetoServerLogError(cmess, myID, parse_status);
+
             } else {
                 //"Unreplyable" error
-                fprintf(stderr, "Critical error: Cannot reply to client...\n");
+                fprintf(stderr, "Critical error: %d - Cannot reply to client...\n", parse_status);
             }
 
             continue;
         }
 
-    ////From now on we are processing a request so it must always be able to end, regardless if threads are shutting down
+        //From now on we are processing a request so it must always be able to end, regardless if threads are shutting down
 
         //Client message has no errors, attempt request
         int i;
@@ -114,8 +122,7 @@ void * startWorking(void * args) {
             writetoServerLog(cmess, myID, num_reserved_seats, reserved_seats);
         }
     }
-
-    printf("About to close thread %d\n", myID);
+finish_thread:
 
     writeServerWorkerClosing(myID);
     return NULL;
@@ -167,6 +174,7 @@ static int parse_client_message(char * client_data, ClientMessage * cmessage) {
     }
 
     //Parsing the seat list itself
+    num_pref_seats = num_pref_seats <= MAX_CLI_SEATS ? num_pref_seats : MAX_CLI_SEATS;
     int i;
     for(i = 0; i < num_pref_seats; ++i) {
         cmessage->pref_seats[i] = parse_unsigned_int(split_data[i+2]);
