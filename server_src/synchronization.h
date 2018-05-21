@@ -15,5 +15,7 @@ void wait_can_send_data_sem();
 void signal_can_send_data_sem();
 void lock_seats_mutex(unsigned int seatID);
 void unlock_seats_mutex(unsigned int seatID);
+int try_lock_buffer_mutex();
+void unlock_buffer_mutex();
 
 #endif  // _SYNCHRONIZATION_H_

@@ -10,6 +10,7 @@
 static sem_t has_data_sem;
 static sem_t can_send_data_sem;
 static pthread_mutex_t seats_mutex[MAX_ROOM_SEATS];
+static pthread_mutex_t buffer_mutex;
 
 int init_sync() {
     if(sem_init(&has_data_sem, 0, 0) != 0) {
@@ -25,6 +26,10 @@ int init_sync() {
         if(pthread_mutex_init(&seats_mutex[i], NULL) != 0) {
             return -3;
         }
+    }
+
+    if(pthread_mutex_init(&buffer_mutex, NULL) != 0) {
+        return -4;
     }
     
     return 0;
@@ -45,6 +50,10 @@ int finish_sync() {
         if(pthread_mutex_destroy(&seats_mutex[i]) != 0) {
             return -3;
         }
+    }
+
+    if(pthread_mutex_destroy(&buffer_mutex) != 0) {
+        return -4;
     }
 
     return 0;
@@ -95,5 +104,24 @@ void lock_seats_mutex(unsigned int seatID) {
 void unlock_seats_mutex(unsigned int seatID) {
     if(pthread_mutex_unlock(&seats_mutex[seatID]) != 0) {
         fprintf(stderr, "Error in unlocking seats mutex for seat ID %u!\n", seatID);
+    }
+}
+
+int try_lock_buffer_mutex() {
+    int ret_val;
+    if((ret_val = pthread_mutex_trylock(&buffer_mutex)) != 0) {
+        if(ret_val == EBUSY) {
+            return 1;
+        } else {
+            fprintf(stderr, "Error in locking buffer mutex!\n");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+void unlock_buffer_mutex() {
+    if(pthread_mutex_unlock(&buffer_mutex) != 0) {
+        fprintf(stderr, "Error in unlocking buffer mutex!\n");
     }
 }

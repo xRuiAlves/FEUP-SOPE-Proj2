@@ -25,26 +25,30 @@ void * startWorking(void * args) {
     char * mydata;
     ClientMessage cmess;
     int parse_status = 0;
-    int sem_wait_status = 0;
+    int buffer_mutex_wait_status = 0;
     while(worker_status) {
-        //Waits until there is data to read
-        sem_wait_status = try_wait_has_data_sem();
-        if(sem_wait_status == -1) {
-            fprintf(stderr, "Error in call to try wait for has data sem!\n");
+        buffer_mutex_wait_status = try_lock_buffer_mutex();
+        if(buffer_mutex_wait_status == -1) {
+            printf("Thread down! Id: %d\n", myID);
             return (void *) -1;
         }
-        if(sem_wait_status == 1) {
-            //Must wait for semaphore
-            //Sleeping for a bit to reduce processing waste
+        if(buffer_mutex_wait_status == 1) {
+            //Must wait
             usleep(NON_BLOCKING_SEM_WAIT_DELAY_MS * 1000);
-            //Continue to recheck loop condition
             continue;
         }
+
+        //Waits until there is data to read
+        wait_has_data_sem();
         mydata = read_buffer();
+
         //Signals that data can be written once again, for it has been read
         signal_can_send_data_sem();
+        unlock_buffer_mutex();
+
         //Process data
         parse_status = parse_client_message(mydata, &cmess);
+        printf("Thread %u attending request of client %u\n", myID, cmess.pid);
         if(parse_status != 0) {
             //Handle error response, reply to client if need be, etc
             if(parse_status < 0) {
@@ -110,6 +114,8 @@ void * startWorking(void * args) {
             writetoServerLog(cmess, myID, num_reserved_seats, reserved_seats);
         }
     }
+
+    printf("About to close thread %d\n", myID);
 
     writeServerWorkerClosing(myID);
     return NULL;
