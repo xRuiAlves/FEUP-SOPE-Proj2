@@ -15,6 +15,10 @@
 #include <errno.h>
 #include "sbook.h"
 #include "slog.h"
+#include <signal.h>
+
+static pthread_t thread_ids[MAX_NUM_THREADS];
+static unsigned int num_threads;
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -50,8 +54,13 @@ int main(int argc, char * argv[]) {
 
     //Criar fifo de requests
     if(mkfifo(REQUEST_FIFO_NAME, 0660) != 0) {
-        fprintf(stderr, "Error creating requests fifo\n");
-        return -2;
+        if (errno == EEXIST) {
+            unlink(REQUEST_FIFO_NAME);
+            mkfifo(REQUEST_FIFO_NAME, 0660);
+        } else {
+            fprintf(stderr, "Error creating requests fifo\n");
+            return -2;
+        }   
     }
 
     //Inicializar mecanismos de sincronização
@@ -61,16 +70,17 @@ int main(int argc, char * argv[]) {
    }
 
     //Criar num_ticket_offices threads auxiliares
-    pthread_t t_ids[num_ticket_offices];
     int i;
+    num_threads = num_ticket_offices;
     for(i = 0; i < num_ticket_offices; ++i) {
         //printf("Creating thread number %d\n", i);
-        if(pthread_create(&(t_ids[i]), NULL, startWorking, NULL) != 0) {
+        if(pthread_create(&(thread_ids[i]), NULL, startWorking, NULL) != 0) {
             fprintf(stderr, "Error creating thread %d\n", i);
         }
     }
 
     //Busy listen no fifo de requests
+    setup_alarm(open_time);
     listen_for_requests(open_time);
     //Colocar num buffer unitário para threads irem buscar (feito acima)
 
@@ -88,28 +98,7 @@ int main(int argc, char * argv[]) {
      */
 
     //Fim do main thread:
-    //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
-    unlink(REQUEST_FIFO_NAME);
-    //Informar os threads que devem terminar
-    set_worker_status(WORKER_STOP);
-    //Aguardar que os threads terminem
-    for(i = 0; i < num_ticket_offices; ++i) {
-        //printf("Waiting for thread number %d\n", i);
-        if(pthread_join(t_ids[i], NULL) != 0) {
-            fprintf(stderr, "Error attempting to join thread %d\n", i);
-        }
-    }
-
-    //Fecho de mecanismos de sincronização
-    if(finish_sync() != 0) {
-        fprintf(stderr, "Error in closing synchronization mechanisms!\n");
-    }
-
-    // Close log files
-    writeServerClosing();
-    close_slog_file();
-    close_sbook_file();
-
+    
     return 0;
 }
 
@@ -148,17 +137,20 @@ int listen_for_requests(int open_time_s) {
     int fifo_read_fd = open(REQUEST_FIFO_NAME, O_RDONLY | O_NONBLOCK);
     char read_buffer[MAX_MESSAGE_SIZE];
     int n_chars_read = 0;
-    time_t start_time;
-    time(&start_time);
 
     if(fifo_read_fd == -1) {
         return -1;
     }
 
-    //time(NULL) gets the current time, so difftime compares the current time to the time when this function started
-    while(difftime(time(NULL), start_time) <= open_time_s) {
+    while(1) {
         //Waits until potentially read data can be sent for reading
-        wait_can_send_data_sem();
+        if (is_buffer_full()) {
+            continue;
+        }
+        else {
+            wait_until_buffer_empty();
+        }
+
         //Reads data
         do {
             n_chars_read = readline_until_char(fifo_read_fd, read_buffer, '\n');
@@ -171,15 +163,15 @@ int listen_for_requests(int open_time_s) {
                 usleep(CLOSED_WRITE_FIFO_WAIT_DELAY_MS * 1000);
                 continue;
             }
-        } while(n_chars_read == 0 && difftime(time(NULL), start_time) <= open_time_s);
+        } while(n_chars_read == 0);
 
         //Because it is possible to exit the internal loop with nothing read (time has ended)
         if(n_chars_read > 0) {
             //Writes it to buffer
             write_to_buffer(read_buffer);
             //Signals that there is data to read
-            signal_has_data_sem();
-        }
+            signal_buffer_full();
+        } 
     }
 
     close(fifo_read_fd);
@@ -188,4 +180,36 @@ int listen_for_requests(int open_time_s) {
 
 void print_usage(FILE * stream, char * progname) {
     fprintf(stream, "usage: %s <num_room_seats> <num_ticket_offices> <open_time>\n", progname);
+}
+
+void close_server() {
+    //Fechar fifo de pedidos (é fechado na função de leitura o descritor de leitura)
+    unlink(REQUEST_FIFO_NAME);
+    //Informar os threads que devem terminar
+    set_worker_status(WORKER_STOP);
+    //Aguardar que os threads terminem
+    int i;
+    for(i = 0; i < num_threads; ++i) {
+        //printf("Waiting for thread number %d\n", i);
+        if(pthread_join(thread_ids[i], NULL) != 0) {
+            fprintf(stderr, "Error attempting to join thread %d\n", i);
+        }
+    }
+
+    //Fecho de mecanismos de sincronização
+    if(finish_sync() != 0) {
+        fprintf(stderr, "Error in closing synchronization mechanisms!\n");
+    }
+
+    // Close log files
+    writeServerClosing();
+    close_slog_file();
+    close_sbook_file();
+    
+    exit(0);
+}
+
+void setup_alarm(unsigned int time_out) {
+    alarm(time_out);
+    signal(SIGALRM, close_server);
 }

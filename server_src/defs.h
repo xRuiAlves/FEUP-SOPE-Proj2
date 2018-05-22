@@ -16,6 +16,7 @@
 #define WIDTH_XXNN      5
 #define WIDTH_SEAT      4
 #define WIDTH_NT        2
+#define MAX_NUM_THREADS 99
 
 //Delay in request processing simulation
 #include <unistd.h>

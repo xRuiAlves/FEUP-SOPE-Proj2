@@ -27,35 +27,26 @@ void * startWorking(void * args) {
     int parse_status = 0;
     int buffer_mutex_wait_status = 0;
     while(worker_status) {
-        buffer_mutex_wait_status = try_lock_buffer_mutex();
-        if(buffer_mutex_wait_status == -1) {
-            printf("Thread down! Id: %d\n", myID);
-            return (void *) -1;
-        }
-        if(buffer_mutex_wait_status == 1) {
-            //Must wait
+        if (!is_buffer_full()) {
             continue;
         }
-
-        //Waits until there is data to read
-        while (try_wait_has_data_sem() != 0) {
-            if (!worker_status) {
-                unlock_buffer_mutex();
-                goto finish_thread;
+        else {
+            buffer_mutex_wait_status = wait_until_buffer_full();
+            if(buffer_mutex_wait_status == -1) {
+                printf("Thread down! Id: %d\n", myID);
+                return (void *) -1;
+            }
+            if(buffer_mutex_wait_status == 1) {
+                //Must wait
+                continue;
             }
         }
         mydata = read_buffer();
 
-        //Signals that data can be written once again, for it has been read
-        signal_can_send_data_sem();
-        unlock_buffer_mutex();
-
-        if (mydata == NULL) {
-            continue;
-        }
-
         //Process data
         parse_status = parse_client_message(mydata, &cmess);
+        signal_buffer_empty();
+
         if(parse_status != 0 && worker_status) {
             //Handle error response, reply to client if need be, etc
             if(parse_status < 0) {
@@ -122,7 +113,6 @@ void * startWorking(void * args) {
             writetoServerLog(cmess, myID, num_reserved_seats, reserved_seats);
         }
     }
-finish_thread:
 
     writeServerWorkerClosing(myID);
     return NULL;
